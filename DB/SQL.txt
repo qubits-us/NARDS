@@ -1,0 +1,147 @@
+CREATE TABLE Ards
+(
+    ArdID integer not null,
+    GroupID integer not null,
+    ProcessID integer not null,
+    DisplayName varchar(20)
+    LastIP varchar(12),
+    LastConnection timestamp,
+    Online boolean,
+    firmware decimal (8,4)
+    );
+    
+create index ArdsByID on Ards (ArdID);   
+
+CREATE TABLE ArdValues
+(
+    ArdID integer not null,
+    ValIndex integer not null,
+    DisplayName varchar(20),
+    ValueInt bigint,
+    ValueFloat double precision    
+    );
+    
+create index ValuesByArd on ArdValues (ArdID, ValIndex);   
+
+
+create table LogData
+(
+   Stamp timestamp,
+   ArdID  integer,
+   ValueType integer,
+   ValueIndex integer,
+   ValueInt bigint,
+   ValueFloat double precision
+   );
+   
+create index LogsByArd on LogData (ArdID,Stamp);  
+ 
+
+
+create table LogImg
+(
+   Stamp timestamp,
+   ArdID  integer,
+   Image  blob (,0)
+   );
+
+
+CREATE TABLE ArdCommands
+(
+    CommandID integer not null,
+    ArdID integer not null,
+    Command smallint,
+    Op1 smallint,
+    Op2 smallint,
+    Op3 smallint,
+    Op4 smallint
+    ValueInt bigint,
+    ValueFloat double precision
+    );
+    
+
+create index CommandsByID on ArdCommands (CommandID);   
+create index CommandsByArd on ArdCommands (ArdID, CommandID);   
+create generator GEN_COMMAND_ID;
+
+CREATE TABLE Screens
+(
+    ScreenID integer not null,
+    DisplayName varchar(20)
+    );
+    
+create index ScreensByID on Screens (ScreenID);   
+create generator GEN_SCREEN_ID;
+
+CREATE TABLE ScreenItems
+(
+    ScreenID integer not null,
+    ItemID integer not null,
+    ArdID integer not null,
+    DisplayName varchar(20),
+    PosLeft integer,
+    PosTop integer,
+    height integer,
+    width integer,
+    OfflineImg varchar(200),
+    OnlineImg varchar(200),
+    AlertImg varchar(200),
+    OnImg Varchar(200),
+    OffImg Varchar(200),
+    ShowName boolean,
+    DNLeft integer,
+    DNTop integer,
+    DNSize integer
+    );
+
+
+    
+    create index ScreenItemsById on ScreenItems (ScreenID, ArdID);
+
+
+CREATE TABLE ScreenValues
+(
+    ScreenID integer not null,
+    ItemId integer not null,
+    ArdID integer not null,
+    ValIndex integer not null,
+    ValueType integer,
+    DisplayNum integer,
+    TrigIVal integer,
+    TrigFVal float,
+    TrigCalc integer,
+    TrigType integer,
+    PosLeft integer, 
+    PosTop integer,
+    FontSize integer,
+    FontColor integer,
+    SVID integer not null
+ );
+
+create table Firmwares
+(
+   FirmId integer not null,
+   Stamp timestamp not null,
+   ArdID  integer,
+   Ver decimal(8,4),
+   Firmware  blob (,0)
+   );
+
+create generator GEN_FIRMWARE_ID;
+create index FirmsByID on Firmwares (FirmID);   
+create index FirmsByNardStamp on Firmwares (ArdID, Stamp);   
+
+create table Sketches
+(
+   SketchId integer not null,
+   Stamp timestamp not null,
+   ArdID  integer,
+   Ver decimal(8,4),
+   Sketch  blob (,1),
+   FileName varchar(512)
+   );
+
+create generator GEN_SKETCH_ID;
+create index SketchesByID on Sketches (SketchID);   
+create index SketchesByNardStamp on Sketches (ArdID, Stamp);   
+
