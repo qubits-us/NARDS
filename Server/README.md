@@ -17,8 +17,8 @@ the SYSDBA password expected is qubits but this can be changed to whatever.
 You'll get an error connecting to db, goto file->server->config and set the password, restart app.
 
 you need a database, i've provided a script to create a new and also my current test db.
-put your db where ever you like, then edit the firebird databaes.conf and add
-Nards=c:\Nards\db\NARDS.FDB
+put your db where ever you like, then edit the firebird databaes.conf and add<br>
+Nards=c:\Nards\db\NARDS.FDB<br>
 to the live databases section and good to go.
 
 please note this is a pre-release, i'm activivly altering allof of things, database structure is volitile.
