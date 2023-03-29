@@ -192,9 +192,17 @@ object NardViewFrm: TNardViewFrm
     object tsImages: TTabSheet
       Caption = 'Images'
       ImageIndex = 1
+      object DBText1: TDBText
+        Left = 40
+        Top = 0
+        Width = 273
+        Height = 17
+        DataField = 'STAMP'
+        DataSource = dsImg
+      end
       object DBImage1: TDBImage
         Left = 32
-        Top = 3
+        Top = 18
         Width = 289
         Height = 196
         DataField = 'IMAGE'
@@ -203,7 +211,7 @@ object NardViewFrm: TNardViewFrm
       end
       object DBNavigator1: TDBNavigator
         Left = 69
-        Top = 205
+        Top = 216
         Width = 228
         Height = 25
         DataSource = dsImg

@@ -159,10 +159,12 @@ object MainFrm: TMainFrm
       object View2: TMenuItem
         Caption = 'Messages'
         Checked = True
+        OnClick = View2Click
       end
       object ScreenPanel1: TMenuItem
         Caption = 'Screen Panel'
         Checked = True
+        OnClick = ScreenPanel1Click
       end
     end
     object Nards1: TMenuItem

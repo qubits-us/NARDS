@@ -75,6 +75,8 @@ type
     procedure btnNextScreenClick(Sender: TObject);
     procedure btnPrevScreenClick(Sender: TObject);
     procedure OnVarChanged(Sender: TObject);
+    procedure View2Click(Sender: TObject);
+    procedure ScreenPanel1Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -388,6 +390,21 @@ end;
 
 
 
+procedure TMainFrm.View2Click(Sender: TObject);
+begin
+//view messages clicked..
+//hide or show server messages..
+if View2.Checked then
+  begin
+  View2.Checked:=false;
+  mLog.Visible:=false;
+  end else
+    begin
+    View2.Checked:=true;
+    mLog.Visible:=true;
+    end;
+end;
+
 procedure TMainFrm.LayoutNard(aNard:tNardView);
 var
 aFileName:string;
@@ -500,12 +517,18 @@ if Sender is tNardView then
     dmDb.qryNardValues.SQL.Clear;
     dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNardID));
     dmDb.qryNardValues.Active:=true;
+    dmDb.qryImg.Active:=false;
+    dmDb.qryImg.SQL.Clear;
+    dmDb.qryImg.SQL.Add('select * from LogImg');
+    dmDb.qryImg.SQL.Add('where ArdId='+IntToStr(aNardID));
+    dmDb.qryImg.Active:=true;
     aFrm:=TNardViewFrm.Create(application);
     aFrm.NardID:=aNardID;
     aFrm.edNardID.Text:=IntToStr(aNardID);
     aFrm.ShowModal;
     aFrm.Free;
     dmDb.qryNardValues.Active:=false;
+    dmDb.qryImg.Active:=false;
    end;
   end;
 end;
@@ -978,6 +1001,21 @@ begin
 aFrm:=tReportLogsFrm.Create(application);
 aFrm.ShowModal;
 aFrm.Free;
+end;
+
+procedure TMainFrm.ScreenPanel1Click(Sender: TObject);
+begin
+//view screen panel..
+//hide or show the screen selection panel..
+if ScreenPanel1.Checked then
+  begin
+   pnlTop.Visible:=false;
+   ScreenPanel1.Checked:=false;
+  end else
+     begin
+     ScreenPanel1.Checked:=true;
+     pnlTop.Visible:=true;
+     end;
 end;
 
 procedure TMainFrm.Server2Click(Sender: TObject);

@@ -31,6 +31,7 @@ type
     btnClose: TButton;
     DBImage1: TDBImage;
     DBNavigator1: TDBNavigator;
+    DBText1: TDBText;
     procedure btnCloseClick(Sender: TObject);
     procedure btnExecClick(Sender: TObject);
     procedure btnGetClick(Sender: TObject);

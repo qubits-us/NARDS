@@ -114,7 +114,7 @@ object ScreenValsFrm: TScreenValsFrm
     Width = 121
     Height = 23
     TabOrder = 3
-    Text = 'edIndex'
+    Text = '0'
   end
   object cmbType: TComboBox
     Left = 16
@@ -143,7 +143,7 @@ object ScreenValsFrm: TScreenValsFrm
     Width = 121
     Height = 23
     TabOrder = 6
-    Text = 'edTrigVal'
+    Text = '0'
   end
   object cmbTrigType: TComboBox
     Left = 16
