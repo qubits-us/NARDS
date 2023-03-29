@@ -21,7 +21,7 @@ put your db where ever you like, then edit the firebird databaes.conf and add<br
 Nards=c:\Nards\db\NARDS.FDB<br>
 to the live databases section and good to go.
 
-please note this is a pre-release, i'm activivly altering allof of things, database structure is volitile.
+please note this is a pre-release, i'm actively altering allof of things, database structure is volitile.
 
 i double recommend FlameRobin for administering the firebird db.
 
