@@ -19,6 +19,7 @@ You'll get an error connecting to db, goto file->server->config and set the pass
 you need a database, i've provided a script to create a new and also my current test db.
 put your db where ever you like, then edit the firebird databaes.conf and add<br>
 Nards=c:\Nards\db\NARDS.FDB<br>
+Change this to where you have placed your DB.
 to the live databases section and good to go.
 
 please note this is a pre-release, i'm actively altering allof of things, database structure is volitile.
