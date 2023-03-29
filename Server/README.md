@@ -12,7 +12,7 @@ Each screen item currently has 2 values and a name that can be programmed.
 Of course pics are all programmmable and need to be in the image folder located inside executable folder.
 
 What you need?
-Install firebaird 3 server.
+Install firebird 3 server.
 the SYSDBA password expected is qubits but this can be changed to whatever.
 You'll get an error connecting to db, goto file->server->config and set the password, restart app.
 
