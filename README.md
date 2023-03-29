@@ -1,5 +1,5 @@
 # NARDS
-Networked ARDuino System
+Networked ARD System
 
 Allows for network connected ards and esps..
 
