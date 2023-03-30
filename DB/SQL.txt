@@ -145,3 +145,28 @@ create generator GEN_SKETCH_ID;
 create index SketchesByID on Sketches (SketchID);   
 create index SketchesByNardStamp on Sketches (ArdID, Stamp);   
 
+CREATE TABLE Hashes
+(
+    HashID integer not null,
+    Hash bigint not null,
+    GroupID integer,
+    DisplayName varchar(20),
+    AccessLevel integer,
+    LastAccess timestamp
+    );
+    
+create index HashesByID on Hashes (HashID,DisplayName);
+create index HashesByAccess on Hashes (LastAccess);
+create index HashesByHash on Hashes (Hash);   
+create generator GEN_HASH_ID;
+
+create table LogHash
+(
+   Stamp timestamp,
+   ArdID  integer,
+   hash  bigint,
+   pass  boolean
+   );
+
+create index HashLogByStamp on LogHash (Stamp);
+
