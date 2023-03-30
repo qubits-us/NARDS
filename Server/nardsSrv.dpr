@@ -22,7 +22,10 @@ uses
   frmSourceView in 'frmSourceView.pas' {SourceViewFrm},
   frmMsg in 'frmMsg.pas' {MsgFrm},
   frmSourceList in 'frmSourceList.pas' {SourceListFrm},
-  frmFirmwareList in 'frmFirmwareList.pas' {FirmwareListFrm};
+  frmFirmwareList in 'frmFirmwareList.pas' {FirmwareListFrm},
+  frmHashList in 'frmHashList.pas' {HashListFrm},
+  frmManageLogs in 'frmManageLogs.pas' {ManageLogsFrm},
+  frmLogView in 'frmLogView.pas' {LogViewFrm};
 
 {$R *.res}
 

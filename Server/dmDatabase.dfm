@@ -861,4 +861,44 @@ object dmDB: TdmDB
     Left = 192
     Top = 360
   end
+  object qryHashes: TZQuery
+    Connection = dbConn
+    SQL.Strings = (
+      'select * from hashes')
+    Params = <>
+    Left = 320
+    Top = 160
+    object qryHashesHASHID: TZIntegerField
+      FieldName = 'HASHID'
+      Required = True
+    end
+    object qryHashesHASH: TZInt64Field
+      FieldName = 'HASH'
+      Required = True
+    end
+    object qryHashesGROUPID: TZIntegerField
+      FieldName = 'GROUPID'
+    end
+    object qryHashesDISPLAYNAME: TZUnicodeStringField
+      FieldName = 'DISPLAYNAME'
+    end
+    object qryHashesACCESSLEVEL: TZIntegerField
+      FieldName = 'ACCESSLEVEL'
+    end
+    object qryHashesLASTACCESS: TZDateTimeField
+      FieldName = 'LASTACCESS'
+    end
+  end
+  object seqHashId: TZSequence
+    Connection = dbConn
+    SequenceName = 'GEN_HASH_ID'
+    Left = 200
+    Top = 296
+  end
+  object qryLogView: TZQuery
+    Connection = dbConn
+    Params = <>
+    Left = 328
+    Top = 248
+  end
 end

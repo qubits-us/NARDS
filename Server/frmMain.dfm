@@ -12,7 +12,7 @@ object MainFrm: TMainFrm
   Font.Name = 'Segoe UI'
   Font.Style = []
   Menu = MainMenu1
-  Position = poDesigned
+  Position = poDesktopCenter
   OnClose = FormClose
   OnCreate = FormCreate
   TextHeight = 15
@@ -170,18 +170,27 @@ object MainFrm: TMainFrm
     object Nards1: TMenuItem
       Caption = '&Nards'
       object List1: TMenuItem
-        Caption = 'List'
+        Caption = 'Nard List'
         OnClick = List1Click
+      end
+      object Hashes1: TMenuItem
+        Caption = 'Hashes'
+        OnClick = Hashes1Click
       end
     end
     object Logs1: TMenuItem
       Caption = '&Logs'
-      object Logs2: TMenuItem
+      object menLogsReport: TMenuItem
         Caption = '&Report'
-        OnClick = Logs2Click
+        OnClick = menLogsReportClick
       end
-      object Manage1: TMenuItem
-        Caption = '&Manage'
+      object menLogView: TMenuItem
+        Caption = 'View'
+        OnClick = menLogViewClick
+      end
+      object menLogManage: TMenuItem
+        Caption = 'Manage'
+        OnClick = menLogManageClick
       end
     end
     object heme1: TMenuItem

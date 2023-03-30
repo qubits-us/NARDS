@@ -147,6 +147,15 @@ type
     qryFirmwareListARDID: TZIntegerField;
     qryFirmwareListVER: TZBCDField;
     qryFirmwareListFIRMWARE: TZBlobField;
+    qryHashes: TZQuery;
+    seqHashId: TZSequence;
+    qryHashesHASHID: TZIntegerField;
+    qryHashesHASH: TZInt64Field;
+    qryHashesGROUPID: TZIntegerField;
+    qryHashesDISPLAYNAME: TZUnicodeStringField;
+    qryHashesACCESSLEVEL: TZIntegerField;
+    qryHashesLASTACCESS: TZDateTimeField;
+    qryLogView: TZQuery;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
@@ -159,6 +168,8 @@ type
     function CheckDBString(dbString:String):String;
     procedure SaveImg;
     function ScrambledEggs(Action, Src, Key : String) : String;
+    function Hash(aStr:string):UInt32;
+
   end;
 
 var
@@ -169,6 +180,35 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+
+
+{
+
+//djb2
+uint32_t Nard::_hash(char *str){
+    uint32_t hash = 5381;
+    int c;
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    return hash;
+}
+
+function TDmDb.Hash(aStr:string):UInt32;
+var
+  I: Integer;
+begin
+result :=0;
+if length(aStr)>0 then
+  begin
+  result := $1505;
+  for I := 1 to length(aStr) do
+     result := ((result shl 5)+result)+Ord(aStr[i]);
+  end;
+end;
+
+
+
 
 
 

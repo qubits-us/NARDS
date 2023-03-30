@@ -22,8 +22,7 @@ type
     mLog: TMemo;
     Nards1: TMenuItem;
     Logs1: TMenuItem;
-    Logs2: TMenuItem;
-    Manage1: TMenuItem;
+    menLogsReport: TMenuItem;
     tmrRefreshNards: TTimer;
     pmNard: TPopupMenu;
     AddNard1: TMenuItem;
@@ -44,6 +43,9 @@ type
     View2: TMenuItem;
     ScreenPanel1: TMenuItem;
     List1: TMenuItem;
+    Hashes1: TMenuItem;
+    menLogView: TMenuItem;
+    menLogManage: TMenuItem;
     procedure File2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Server2Click(Sender: TObject);
@@ -58,7 +60,7 @@ type
     procedure NardClick(Sender:tObject);
     procedure UpdateNards;
     procedure tmrRefreshNardsTimer(Sender: TObject);
-    procedure Logs2Click(Sender: TObject);
+    procedure menLogsReportClick(Sender: TObject);
     procedure RecreateNards;
     procedure btnModeClick(Sender: TObject);
     procedure btnNewClick(Sender: TObject);
@@ -77,6 +79,9 @@ type
     procedure OnVarChanged(Sender: TObject);
     procedure View2Click(Sender: TObject);
     procedure ScreenPanel1Click(Sender: TObject);
+    procedure Hashes1Click(Sender: TObject);
+    procedure menLogManageClick(Sender: TObject);
+    procedure menLogViewClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -102,7 +107,8 @@ implementation
 
 {$R *.dfm}
 
-uses frmNardList,frmNardView,frmReportLogs,frmGetStr,frmAbout,frmServerConfig,frmSourceView,frmMsg;
+uses frmNardList,frmNardView,frmReportLogs,frmGetStr,frmAbout,frmServerConfig,frmSourceView,frmMsg,
+     frmHashList, frmManageLogs,frmLogView;
 
 
 procedure TMainFrm.RecreateNards;
@@ -403,6 +409,26 @@ if View2.Checked then
     View2.Checked:=true;
     mLog.Visible:=true;
     end;
+end;
+
+procedure TMainFrm.menLogManageClick(Sender: TObject);
+var
+aFrm:tManageLogsFrm;
+begin
+//manage logs
+aFrm:=tManageLogsFrm.Create(Application);
+aFrm.ShowModal;
+aFrm.Free;
+end;
+
+procedure TMainFrm.menLogViewClick(Sender: TObject);
+var
+aFrm:tLogViewFrm;
+begin
+ //
+ aFrm:=tLogViewFrm.Create(Application);
+ aFrm.ShowModal;
+ aFrm.Free;
 end;
 
 procedure TMainFrm.LayoutNard(aNard:tNardView);
@@ -970,6 +996,21 @@ begin
   //
 end;
 
+procedure TMainFrm.Hashes1Click(Sender: TObject);
+var
+aFrm:tHashListFrm;
+begin
+//our hash list..
+
+dmDb.qryHashes.Active := true;
+aFrm:=THashListFrm.Create(application);
+aFrm.ShowModal;
+aFrm.Free;
+
+dmDb.qryHashes.Active := false;
+
+end;
+
 procedure TMainFrm.Help2Click(Sender: TObject);
 var
 aFrm:tAboutFrm;
@@ -993,7 +1034,7 @@ if Dark1.Checked then
   end;
 end;
 
-procedure TMainFrm.Logs2Click(Sender: TObject);
+procedure TMainFrm.menLogsReportClick(Sender: TObject);
 var
 aFrm:TReportLogsFrm;
 begin
