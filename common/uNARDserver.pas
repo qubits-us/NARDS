@@ -201,6 +201,7 @@ type
     procedure piRecvGet(aNardCtx: tNardCntx);
     procedure piRecvSet(aNardCtx: tNardCntx);
     procedure piRecvSetnLog(aNardCtx: tNardCntx);
+    procedure piRecvHash(aNardCtx: tNardCntx);
 
   public
     Constructor Create;
@@ -1388,6 +1389,7 @@ begin
          CMD_SET: piRecvSet(aPacketCtx);
          CMD_GET: piRecvGet(aPacketCtx);
          CMD_SETNLOG: piRecvSetnLog(aPacketCtx);
+         CMD_HASH:;
         end;
 
 end;
@@ -2161,5 +2163,191 @@ failed: boolean;
     end;
 
  end;
+
+ procedure tNardServer.piRecvHash(aNardCtx: tNardCntx);
+var
+alu : UInt32;//unsigned 32 bit
+aBuff: TIdBytes;
+SetFailed: boolean;
+aStrm:tMemoryStream;
+ begin
+ // set a value
+ if not aNardCtx.fRegged then exit; // outta here..
+ SetFailed := false;
+
+  if (aNardCtx.fHdr.Option[0] = HASH_CHECK) then
+    begin
+    //recv a hash
+    alu:=0;
+       if sizeOf(aNardCtx.fBuff) = sizeOf(UInt32) then
+         move(aNardCtx.fBuff[0],alu,SizeOf(UInt32)) else
+         begin
+             LogError('NardCtx:RecvHash:Buffer Size Error from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_HASH;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+            IncSent;
+            exit;
+         end;
+
+
+     if not SetFailed then
+      begin
+          aNardCtx.fQryGen.Active := false;
+          aNardCtx.fQryGen.SQL.Clear;
+          aNardCtx.fQryGen.SQL.Add('Select * from Hashes');
+          aNardCtx.fQryGen.SQL.Add('where Hash='+IntToStr(alu));
+         try aNardCtx.fQryGen.Active := true;
+           except on e: Exception do
+            begin
+             LogError('NardCtx:SetValue:ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_HASH;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+            IncSent;
+            exit;
+            end;
+
+         end;
+
+        if aNardCtx.fQryGen.RecordCount = 1 then
+          begin
+          if aNardCtx.fQryGen.FieldByName('AccessLevel').AsInteger >0 then
+            begin
+            //access granted
+            aNardCtx.fQryGen.Active:=false;
+            aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGHASH (STAMP, ARDID, HASH, PASS)');
+            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(alu)+', True )');
+             try aNardCtx.fQryGen.ExecSQL;
+               except on e: Exception do
+                begin
+                 LogError('NardCtx:RecvHash:Logging: ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+                  SetFailed := true;
+                 // send a nak
+                 SetLength(aBuff, SizeOf(tPacketHdr));
+                 aNardCtx.fHdr.Command := CMD_NAK;
+                 aNardCtx.fHdr.Option[0] := CMD_HASH;
+                 aNardCtx.fHdr.Option[1] := 0;
+                 aNardCtx.fHdr.Option[2] := 0;
+                 aNardCtx.fHdr.Option[3] := 0;
+                 aNardCtx.fHdr.DataSize := 0;
+                 Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+                 aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+                 SetLength(aBuff, 0);
+                 IncSent;
+                 exit;
+                end;
+
+             end;
+            end else
+               begin
+                 //access denied
+                 SetFailed := true;
+               aNardCtx.fQryGen.Active:=false;
+               aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGHASH (STAMP, ARDID, HASH, PASS)');
+               aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(alu)+', False )');
+                try aNardCtx.fQryGen.ExecSQL;
+                  except on e: Exception do
+                  begin
+                    LogError('NardCtx:RecvHash:Logging: ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+                    SetFailed := true;
+                    // send a nak
+                    SetLength(aBuff, SizeOf(tPacketHdr));
+                    aNardCtx.fHdr.Command := CMD_NAK;
+                    aNardCtx.fHdr.Option[0] := CMD_HASH;
+                    aNardCtx.fHdr.Option[1] := 0;
+                    aNardCtx.fHdr.Option[2] := 0;
+                    aNardCtx.fHdr.Option[3] := 0;
+                    aNardCtx.fHdr.DataSize := 0;
+                    Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+                    aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+                    SetLength(aBuff, 0);
+                    IncSent;
+                    exit;
+                  end;
+                end;
+               end;
+          end else SetFailed:=true;
+
+
+
+
+      end;
+
+      if not SetFailed then
+       begin
+        // send a pass
+        SetLength(aBuff, SizeOf(tPacketHdr));
+        aNardCtx.fHdr.Command := CMD_HASH;
+        aNardCtx.fHdr.Option[0] := HASH_PASS;
+        aNardCtx.fHdr.Option[1] := 0;
+        aNardCtx.fHdr.Option[2] := 0;
+        aNardCtx.fHdr.Option[3] := 0;
+        aNardCtx.fHdr.DataSize := 0;
+        Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+        aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+        SetLength(aBuff, 0);
+        IncSent;
+        TrigSetVar;
+        end else
+            begin
+             LogError('NardCtx:Hash:Invalid Hash from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a fail
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_HASH;
+             aNardCtx.fHdr.Option[0] := HASH_FAIL;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+            IncSent;
+            end;
+
+
+    end else
+        begin
+               LogError('NardCtx:Hash:Invalid Operation from ip:' +aNardCtx.Context.Binding.PeerIP);
+                SetFailed := true;
+               // send a nak
+               SetLength(aBuff, SizeOf(tPacketHdr));
+               aNardCtx.fHdr.Command := CMD_NAK;
+               aNardCtx.fHdr.Option[0] := CMD_HASH;
+               aNardCtx.fHdr.Option[1] := 0;
+               aNardCtx.fHdr.Option[2] := 0;
+               aNardCtx.fHdr.Option[3] := 0;
+               aNardCtx.fHdr.DataSize := 0;
+               Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+               aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+               SetLength(aBuff, 0);
+              IncSent;
+        end;
+
+
+ end;
+
+
+
 
 end.
