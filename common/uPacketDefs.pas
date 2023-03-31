@@ -77,7 +77,7 @@ type
   Command : byte;//1 byte
   Option :array[0..3] of byte;//4 byte
   //-addional data size after header and not including header..
-  DataSize : word;//2 bytes
+  DataSize : UInt32;//4 bytes
 end;
 
 type
