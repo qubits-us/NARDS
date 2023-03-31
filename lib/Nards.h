@@ -60,7 +60,7 @@ struct __attribute__((__packed__)) NardPacket {
   byte     Ident[2];
   byte     Command;
   byte     Options[4];
-  uint16_t DataSize;
+  uint32_t DataSize;//increased from word 3.31.2023 ~q
 };
 
 //nard reg packet..
