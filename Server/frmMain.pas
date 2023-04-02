@@ -62,6 +62,7 @@ type
     procedure NardExecute(aNard:integer;aCmd:integer);
     procedure NardToggle(aNardId:integer;aItemId:integer);
     procedure NardSet(aNardId:integer;aItemId:integer);
+    procedure NardShowImage(aNardId:integer);
     procedure UpdateNards;
     procedure tmrRefreshNardsTimer(Sender: TObject);
     procedure menLogsReportClick(Sender: TObject);
@@ -112,7 +113,7 @@ implementation
 {$R *.dfm}
 
 uses frmNardList,frmNardView,frmReportLogs,frmGetStr,frmAbout,frmServerConfig,frmSourceView,frmMsg,
-     frmHashList, frmManageLogs,frmLogView,frmNardValAdj;
+     frmHashList, frmManageLogs,frmLogView,frmNardValAdj,frmNardImages;
 
 
 procedure TMainFrm.RecreateNards;
@@ -586,7 +587,7 @@ if Sender is tNardView then
           2:NardExecute(aNardId,aCmd);//exec
           3:NardToggle(aNardId,aItemId);//tog
           4:NardSet(aNardId,aItemID);//adj
-          5:;//imgs
+          5:NardShowImage(aNardID);//imgs
          end;
 
        end;
@@ -882,6 +883,23 @@ if aFrm.ShowModal <> mrOK then
    //set new command id to server..
    //causes clients to refresh dbs..
    PacketSrv.CommandID:=nid;
+
+end;
+
+
+procedure TMainFrm.NardShowImage(aNardId: Integer);
+var
+aFrm:tNardImagesFrm;
+begin
+
+    dmDb.qryImg.SQL.Clear;
+    dmDb.qryImg.SQL.Add('select * from LogImg');
+    dmDb.qryImg.SQL.Add('where ArdId='+IntToStr(aNardId));
+    dmDb.qryImg.Active:=true;
+
+aFrm:=tNardImagesFrm.Create(self);
+aFrm.ShowModal;
+aFrm.Free;
 
 end;
 

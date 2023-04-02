@@ -26,7 +26,8 @@ uses
   frmHashList in 'frmHashList.pas' {HashListFrm},
   frmManageLogs in 'frmManageLogs.pas' {ManageLogsFrm},
   frmLogView in 'frmLogView.pas' {LogViewFrm},
-  frmNardValAdj in 'frmNardValAdj.pas' {NardValAdjFrm};
+  frmNardValAdj in 'frmNardValAdj.pas' {NardValAdjFrm},
+  frmNardImages in 'frmNardImages.pas' {NardImagesFrm};
 
 {$R *.res}
 
