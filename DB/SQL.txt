@@ -91,7 +91,13 @@ CREATE TABLE ScreenItems
     ShowName boolean,
     DNLeft integer,
     DNTop integer,
-    DNSize integer
+    DNSize integer,
+    ActionID integer,
+    ActionVal integer,
+    ActionValType integer,
+    ActionValMin integer,
+    ActionValMax integer, 
+    ActionValStep integer
     );
 
 
