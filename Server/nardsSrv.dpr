@@ -25,7 +25,8 @@ uses
   frmFirmwareList in 'frmFirmwareList.pas' {FirmwareListFrm},
   frmHashList in 'frmHashList.pas' {HashListFrm},
   frmManageLogs in 'frmManageLogs.pas' {ManageLogsFrm},
-  frmLogView in 'frmLogView.pas' {LogViewFrm};
+  frmLogView in 'frmLogView.pas' {LogViewFrm},
+  frmNardValAdj in 'frmNardValAdj.pas' {NardValAdjFrm};
 
 {$R *.res}
 

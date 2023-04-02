@@ -4,49 +4,66 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ExtDlgs, Data.DB, Vcl.Grids, Vcl.DBGrids,NardView;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ExtDlgs, Data.DB, Vcl.Grids, Vcl.DBGrids,NardView, Vcl.ComCtrls;
 
 type
   TNardLayoutFrm = class(TForm)
     btnUpdate: TButton;
-    edNardID: TEdit;
-    edLeft: TEdit;
-    edTop: TEdit;
-    edHeight: TEdit;
-    edWidth: TEdit;
     lblItemID: TLabel;
-    edNormalImg: TEdit;
-    btnSelectN: TButton;
-    edOfflineImg: TEdit;
-    edAlertImg: TEdit;
-    btnSelectO: TButton;
-    btnSelectA: TButton;
-    lblNormal: TLabel;
-    lblOffline: TLabel;
-    lblAlert: TLabel;
     dlgSelPic: TOpenPictureDialog;
-    lnlID: TLabel;
-    lblTop: TLabel;
-    lblLeft: TLabel;
-    lblHeight: TLabel;
-    lblWidth: TLabel;
     DBGrid1: TDBGrid;
     dsScreenVals: TDataSource;
     btnAdd: TButton;
     btnEdit: TButton;
     btnDelete: TButton;
-    edOnImg: TEdit;
-    Button1: TButton;
-    lblOnImg: TLabel;
-    edName: TEdit;
+    btnSetV: TButton;
+    PageControl1: TPageControl;
+    tsGen: TTabSheet;
+    tsImg: TTabSheet;
+    tsAct: TTabSheet;
+    edNardID: TEdit;
+    lnlID: TLabel;
     cbShowName: TCheckBox;
-    edVtop: TEdit;
+    edName: TEdit;
+    lblTop: TLabel;
+    lblHeight: TLabel;
+    edHeight: TEdit;
+    edTop: TEdit;
+    lblLeft: TLabel;
+    lblWidth: TLabel;
+    edWidth: TEdit;
+    edLeft: TEdit;
+    edNormalImg: TEdit;
+    lblAlert: TLabel;
+    edAlertImg: TEdit;
+    btnSelectA: TButton;
+    Button1: TButton;
+    edOnImg: TEdit;
+    lblOnImg: TLabel;
+    lblNormal: TLabel;
+    btnSelectN: TButton;
+    btnSelectO: TButton;
+    edOfflineImg: TEdit;
+    lblOffline: TLabel;
+    cmbAction: TComboBox;
+    EdMin: TEdit;
+    edMax: TEdit;
+    lblMax: TLabel;
+    lblValMin: TLabel;
+    lblStepBy: TLabel;
+    edStep: TEdit;
+    cmbActionValType: TComboBox;
+    cmbValType: TLabel;
+    edValID: TEdit;
+    Label1: TLabel;
+    lblAction: TLabel;
+    GroupBox1: TGroupBox;
     edVLeft: TEdit;
     edVSize: TEdit;
-    btnSetV: TButton;
-    lblNameTop: TLabel;
-    lblNameLeft: TLabel;
     lblNameSize: TLabel;
+    lblNameLeft: TLabel;
+    edVtop: TEdit;
+    lblNameTop: TLabel;
     procedure beOnlineImgLeftButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnSelectNClick(Sender: TObject);
@@ -64,6 +81,7 @@ type
     function  UpdateScreenNard:boolean;
     procedure cbShowNameClick(Sender: TObject);
     procedure btnSetVClick(Sender: TObject);
+    procedure cmbActionChange(Sender: TObject);
 
   private
     { Private declarations }
@@ -265,7 +283,9 @@ if ItemID = 0 then
  dmDb.qryGen.SQL.Clear;
  dmDb.qryGen.SQL.Add('update ScreenItems a set a.ArdID='+edNardID.Text+', a.DISPLAYNAME='''+edName.Text+''',');
  dmDb.qryGen.SQL.Add('a.ShowName='+BoolToStr(cbShowName.Checked,true)+' ,a.PosLeft='+edLeft.Text+', a.PosTop='+edTop.Text+',');
- dmDb.qryGen.SQL.Add('a.DNLeft='+edVLeft.Text+' ,a.DNTop='+edVTop.Text+', a.DNSize='+edVSize.Text+',');
+ dmDb.qryGen.SQL.Add('a.Width='+edWidth.Text+' ,a.Height='+edHeight.Text+',a.DNLeft='+edVLeft.Text+' ,a.DNTop='+edVTop.Text+', a.DNSize='+edVSize.Text+',');
+ dmDb.qryGen.SQL.Add('a.ActionID='+IntToStr(cmbAction.ItemIndex)+' ,a.ActionVal='+edValId.Text+',a.ActionValType='+
+    IntToStr(cmbActionValType.ItemIndex)+' ,a.ActionValMin='+edMin.Text+', a.ActionValMax='+edMax.Text+', a.ActionValStep='+edStep.Text+',');
  dmDb.qryGen.SQL.Add('a.OnlineImg='''+edNormalImg.Text+''',a.OfflineImg='''+edOfflineImg.Text+
                       ''', a.AlertImg= '''+edAlertImg.Text+''' ,a.OnImg= '''+edOnImg.Text+'''');
  dmDb.qryGen.SQL.Add('where a.Screenid= '+IntToStr(ScreenID)+' AND a.ItemId= '+IntToStr(ItemId));
@@ -297,6 +317,12 @@ if not cbShowName.Checked then
 //    if not Nard.IsOn then Nard.IsOn:=true;
     if not Nard.LblNardName.Visible then Nard.LblNardName.Visible:=true;
     end;
+
+end;
+
+procedure TNardLayoutFrm.cmbActionChange(Sender: TObject);
+begin
+//changing..
 
 end;
 
@@ -335,10 +361,10 @@ end;
 procedure TNardLayoutFrm.FormCreate(Sender: TObject);
 begin
 ItemID:=0;
-Nard:=tNardView.Create(self);
+Nard:=tNardView.Create(self,96,96);
 Nard.Parent:=self;
-Nard.Left:=380;
-Nard.Top:=200;
+Nard.Left:=432;
+Nard.Top:=172;
 Nard.Color:=clNavy;
 NeedSaved:=false;
 end;

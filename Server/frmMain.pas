@@ -58,6 +58,10 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure GetNardCntx;
     procedure NardClick(Sender:tObject);
+    procedure ShowNardInfo(aNard:integer);
+    procedure NardExecute(aNard:integer;aCmd:integer);
+    procedure NardToggle(aNardId:integer;aItemId:integer);
+    procedure NardSet(aNardId:integer;aItemId:integer);
     procedure UpdateNards;
     procedure tmrRefreshNardsTimer(Sender: TObject);
     procedure menLogsReportClick(Sender: TObject);
@@ -108,12 +112,13 @@ implementation
 {$R *.dfm}
 
 uses frmNardList,frmNardView,frmReportLogs,frmGetStr,frmAbout,frmServerConfig,frmSourceView,frmMsg,
-     frmHashList, frmManageLogs,frmLogView;
+     frmHashList, frmManageLogs,frmLogView,frmNardValAdj;
 
 
 procedure TMainFrm.RecreateNards;
 var
   i, aLeft, numNards, aGap: integer;
+  aHeight,aWidth:integer;
   aView:tNardView;
   aFileName:String;
 begin
@@ -149,7 +154,16 @@ begin
 
       for i := 0 to numNards-1 do
       begin
-        aView:= TNardView.Create(self);
+        //added h and w setting 4.1.2023 ~q
+         aHeight:=dmDb.qryScreenItemsHEIGHT.Value;
+         aWidth:=dmDb.qryScreenItemsWIDTH.Value;
+         //set defaults if 0s
+         if aHeight = 0 then aHeight := 96;
+         if aWidth = 0 then aWidth := 96;
+
+
+
+        aView:= TNardView.Create(self,aWidth,aHeight);
         aView.Parent := self;
         aView.ParentColor := false;
         aView.Color := clNavy;
@@ -467,12 +481,27 @@ begin
   LayoutFrm.ScreenID:=CurrentScreen;
   if dmDb.qryScreenItems.RecordCount >0 then
     begin
+      //main
       LayOutFrm.cbShowName.Checked:=dmDb.qryScreenItemsSHOWNAME.Value;
       LayOutFrm.edName.Text:=dmDb.qryScreenItemsDISPLAYNAME.Value;
       LayOutFrm.Nard.LblNardName.Caption:=dmDb.qryScreenItemsDISPLAYNAME.Value;
       LayOutFrm.edVtop.Text:=IntToStr(dmDb.qryScreenItemsDNTOP.Value);
       LayOutFrm.edVleft.Text:=IntToStr(dmDb.qryScreenItemsDNLEFT.Value);
+      //using custom w and h
+      LayOutFrm.edWidth.Text:=IntToStr(dmDb.qryScreenItemsWidth.Value);
+      LayOutFrm.edHeight.Text:=IntToStr(dmDb.qryScreenItemsHeight.Value);
       LayOutFrm.edVSize.Text:=IntToStr(dmDb.qryScreenItemsDNSIZE.Value);
+
+      //action tab 4.1.2023 ~q
+      LayOutFrm.cmbAction.ItemIndex:=dmDb.qryScreenItemsActionID.Value;
+      LayOutFrm.edValId.Text:=IntToStr(dmDb.qryScreenItemsActionVal.Value);
+      LayOutFrm.cmbActionValType.ItemIndex:=dmDb.qryScreenItemsActionValType.Value;
+      LayOutFrm.edStep.Text:=IntToStr(dmDb.qryScreenItemsActionValStep.Value);
+      LayOutFrm.edMin.Text:=IntToStr(dmDb.qryScreenItemsActionValMin.Value);
+      LayOutFrm.edMax.Text:=IntToStr(dmDb.qryScreenItemsActionValMax.Value);
+
+
+      //img tab
       LayOutFrm.edNormalImg.Text:=dmDb.qryScreenItemsONLINEIMG.Value;
       LayOutFrm.edOnImg.Text:=dmDb.qryScreenItemsONIMG.Value;
       LayOutFrm.edOfflineImg.Text:=dmDb.qryScreenItemsOFFLINEIMG.Value;
@@ -527,6 +556,9 @@ procedure TMainFrm.NardClick(Sender: TObject);
 var
 aFrm:TNardViewFrm;
 aNardID:integer;
+aItemId:integer;
+ActId:integer;
+aCmd:integer;
 begin
   //clicked on a nard
 if Sender is tNardView then
@@ -538,26 +570,321 @@ if Sender is tNardView then
    begin
 
     aNardID:=tNardView(Sender).NardNumber;
+    aItemId:=tNardView(Sender).ItemID;
+    ActId:=0;
+    dmDb.qryScreenItems.Active:=false;
+    dmDb.qryScreenItems.SQL.Clear;
+    dmDb.qryScreenItems.SQL.Add('Select * from ScreenItems');
+    dmDb.qryScreenItems.SQL.Add('Where ItemId='+IntToStr(aItemID));
+    dmDb.qryScreenItems.Active:=true;
+    if dmDb.qryScreenItems.RecordCount = 1 then
+       begin
+         aCmd:=dmDb.qryScreenItemsActionVal.Value;
+         ActID:=dmDb.qryScreenItemsActionId.Value;
+         case ActID of
+          1:ShowNardInfo(aNardId);//info
+          2:NardExecute(aNardId,aCmd);//exec
+          3:NardToggle(aNardId,aItemId);//tog
+          4:NardSet(aNardId,aItemID);//adj
+          5:;//imgs
+         end;
 
+       end;
+    dmDb.qryScreenItems.Active:=false;
+   end;
+  end;
+end;
+
+
+procedure TMainFrm.ShowNardInfo(aNard: Integer);
+var
+aFrm:TNardViewFrm;
+begin
+     //prep some qrys
     dmDB.qryNardValues.Active:=False;
     dmDb.qryNardValues.SQL.Clear;
-    dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNardID));
+    dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNard));
     dmDb.qryNardValues.Active:=true;
     dmDb.qryImg.Active:=false;
     dmDb.qryImg.SQL.Clear;
     dmDb.qryImg.SQL.Add('select * from LogImg');
-    dmDb.qryImg.SQL.Add('where ArdId='+IntToStr(aNardID));
+    dmDb.qryImg.SQL.Add('where ArdId='+IntToStr(aNard));
     dmDb.qryImg.Active:=true;
     aFrm:=TNardViewFrm.Create(application);
-    aFrm.NardID:=aNardID;
-    aFrm.edNardID.Text:=IntToStr(aNardID);
+    aFrm.NardID:=aNard;
+    aFrm.edNardID.Text:=IntToStr(aNard);
     aFrm.ShowModal;
     aFrm.Free;
     dmDb.qryNardValues.Active:=false;
     dmDb.qryImg.Active:=false;
-   end;
-  end;
+
 end;
+
+
+procedure TMainFrm.NardExecute(aNard: Integer; aCmd: Integer);
+var
+nid:integer;
+begin
+//execute a function on remote nard..
+
+  dmDB.qryGen.Active:=False;
+  dmDB.qryGen.SQL.Clear;
+  dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4)');
+   nid:=dmDB.seqCommands.GetNextValue;
+   dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNard)+', '+IntToStr(CMD_EXE)+', '+IntToStr(aCmd)+', 0, 0, 0);');
+   try
+      dmDB.qryGen.ExecSQL;
+    except on e:exception do
+      begin
+        ShowMessage(e.message);
+      end;
+
+   end;
+   //set new command id to server..
+   //causes clients to refresh dbs..
+   PacketSrv.CommandID:=nid;
+
+
+end;
+
+procedure TMainFrm.NardToggle(aNardId: Integer; aItemId: Integer);
+var
+nid,tmpInt:integer;
+b1,b2,aType:byte;
+aDouble:double;
+aBigInt:Int64;
+begin
+
+
+    dmDB.qryNardValues.Active:=False;
+    dmDb.qryNardValues.SQL.Clear;
+    dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNardId)+ ' AND a.ValIndex= '+IntToStr(dmDb.qryScreenItemsActionVal.Value));
+    dmDb.qryNardValues.Active:=true;
+    if dmDb.qryNardValues.RecordCount = 0 then
+      begin
+      //val does not exist nothing to do..
+      dmDB.qryNardValues.Active:=False;
+      exit;
+      end;
+
+ if dmDb.qryScreenItemsActionValType.Value < SG_FLT4 then
+    begin
+    aBigInt:=dmDb.qryNardValuesVALUEINT.Value;
+    end else
+       begin
+       aBigInt:=Trunc(dmDb.qryNardValuesVALUEFLOAT.Value);
+       end;
+   //done with thee..
+    dmDB.qryNardValues.Active:=False;
+    dmDb.qryNardValues.SQL.Clear;
+
+
+  //which way are we toggling..
+ if dmDb.qryScreenItemsActionValMin.Value = aBigInt then
+   aBigInt:= dmDb.qryScreenItemsActionValMax.Value else
+      aBigInt:= dmDb.qryScreenItemsActionValMin.Value;
+
+
+
+
+//set a nard val..
+  dmDB.qryGen.Active:=False;
+  dmDB.qryGen.SQL.Clear;
+  dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+  nid:=dmDB.seqCommands.GetNextValue;
+
+    case dmDb.qryScreenItemsActionValType.Value of
+      SG_BYTE:begin
+               b1:=aBigInt;
+               b2:=0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_BYTE)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+              end;
+      SG_WORD:begin
+               tmpInt:=aBigInt;
+               b2:= tmpInt and $FF;
+               b1:= tmpInt shr 8;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_WORD)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+              end;
+      SG_INT16:begin
+               tmpInt:=aBigInt;
+               b2:= tmpInt and $FF;
+               b1:= tmpInt shr 8;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_INT16)+', '+IntToStr(b1)+', '+IntToStr(b2)+',0 ,0 );');
+              end;
+      SG_INT32:begin
+               tmpInt:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_INT32)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(tmpInt)+' ,0 );');
+              end;
+      SG_UINT32:begin
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_UINT32)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(aBigInt)+' ,0 );');
+              end;
+      SG_FLT4:begin
+               aDouble:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_FLT4)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+              end;
+      SG_FLT8:begin
+               aDouble:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_FLT8)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+              end;
+    end;
+
+   try
+      dmDB.qryGen.ExecSQL;
+    except on e:exception do
+      begin
+        ShowMessage(e.message);
+      end;
+
+   end;
+   //set new command id to server..
+   //causes clients to refresh dbs..
+   PacketSrv.CommandID:=nid;
+
+end;
+
+procedure TMainFrm.NardSet(aNardId: Integer; aItemId: Integer);
+var
+nid,tmpInt:integer;
+b1,b2,aType:byte;
+aDouble:double;
+aBigInt,aNewVal:Int64;
+aDesc:String;
+aFrm:tNardValAdjFrm;
+begin
+
+
+    dmDB.qryNardValues.Active:=False;
+    dmDb.qryNardValues.SQL.Clear;
+    dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNardId)+ ' AND a.ValIndex= '+IntToStr(dmDb.qryScreenItemsActionVal.Value));
+    dmDb.qryNardValues.Active:=true;
+    if dmDb.qryNardValues.RecordCount = 0 then
+      begin
+      //val does not exist nothing to do..
+      dmDB.qryNardValues.Active:=False;
+      exit;
+      end;
+
+ if dmDb.qryScreenItemsActionValType.Value < SG_FLT4 then
+    begin
+    aBigInt:=dmDb.qryNardValuesVALUEINT.Value;
+    end else
+       begin
+       aBigInt:=Trunc(dmDb.qryNardValuesVALUEFLOAT.Value);
+       end;
+
+   aDesc:=dmDb.qryNardValuesDisplayName.Value;
+
+   //done with thee..
+    dmDB.qryNardValues.Active:=False;
+    dmDb.qryNardValues.SQL.Clear;
+
+aFrm:=tNardValAdjFrm.Create(Self);
+aFrm.ValMin:=dmDb.qryScreenItemsActionValMin.Value;
+aFrm.ValMax:=dmDb.qryScreenItemsActionValMax.Value;
+aFrm.OrigVal:=aBigInt;
+if aDesc<>'' then
+aFrm.lblValDesc.Caption:=aDesc else
+  aFrm.lblValDesc.Caption:='Value at Index:'+IntToStr(dmDb.qryScreenItemsActionVal.Value);
+aFrm.EdVal.Text:=IntToStr(aBigInt);
+if aFrm.ShowModal <> mrOK then
+  begin
+  aFrm.Free;
+  Exit;
+  end;
+   aBigInt:=aFrm.NewVal;
+   aFrm.Free;
+
+
+
+
+//set a nard val..
+  dmDB.qryGen.Active:=False;
+  dmDB.qryGen.SQL.Clear;
+  dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+  nid:=dmDB.seqCommands.GetNextValue;
+
+    case dmDb.qryScreenItemsActionValType.Value of
+      SG_BYTE:begin
+               b1:=aBigInt;
+               b2:=0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_BYTE)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+              end;
+      SG_WORD:begin
+               tmpInt:=aBigInt;
+               b2:= tmpInt and $FF;
+               b1:= tmpInt shr 8;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_WORD)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+              end;
+      SG_INT16:begin
+               tmpInt:=aBigInt;
+               b2:= tmpInt and $FF;
+               b1:= tmpInt shr 8;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_INT16)+', '+IntToStr(b1)+', '+IntToStr(b2)+',0 ,0 );');
+              end;
+      SG_INT32:begin
+               tmpInt:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_INT32)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(tmpInt)+' ,0 );');
+              end;
+      SG_UINT32:begin
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_UINT32)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(aBigInt)+' ,0 );');
+              end;
+      SG_FLT4:begin
+               aDouble:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_FLT4)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+              end;
+      SG_FLT8:begin
+               aDouble:=aBigInt;
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(aNardID)+', '+IntToStr(CMD_SET)+
+               ', '+IntToStr(dmDb.qryScreenItemsActionVal.Value)+', '+IntToStr(SG_FLT8)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+              end;
+    end;
+
+   try
+      dmDB.qryGen.ExecSQL;
+    except on e:exception do
+      begin
+        ShowMessage(e.message);
+      end;
+
+   end;
+   //set new command id to server..
+   //causes clients to refresh dbs..
+   PacketSrv.CommandID:=nid;
+
+end;
+
 
 procedure TMainFrm.btnDeleteClick(Sender: TObject);
 begin
@@ -661,7 +988,7 @@ var
 begin
   //
 
-        aView:= TNardView.Create(self);
+        aView:= TNardView.Create(self,96,96);
         i:=dmDB.seqItemId.GetNextValue;
 
 
@@ -814,6 +1141,7 @@ end;
 procedure TMainFrm.FormCreate(Sender: TObject);
 var
   i, aLeft, numNards: integer;
+  aHeight, aWidth :integer;
   aView:tNardView;
   aGap:integer;
   aFileName,aStr:String;
@@ -928,7 +1256,14 @@ aIni.Free;//done with you..
 
       for i := 0 to numNards-1 do
       begin
-        aView:= TNardView.Create(self);
+        //added h and w setting 4.1.2023 ~q
+         aHeight:=dmDb.qryScreenItemsHEIGHT.Value;
+         aWidth:=dmDb.qryScreenItemsWIDTH.Value;
+         //set defaults if 0s
+         if aHeight = 0 then aHeight := 96;
+         if aWidth = 0 then aWidth := 96;
+
+        aView:= TNardView.Create(self, aWidth, aHeight);
         aView.Parent := self;
         aView.ParentColor := false;
         aView.Color := clNavy;

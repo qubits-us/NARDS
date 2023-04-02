@@ -3,7 +3,7 @@ object ScreenValsFrm: TScreenValsFrm
   Top = 0
   BorderIcons = []
   BorderStyle = bsToolWindow
-  Caption = 'Screen item value...'
+  Caption = 'Nard item value...'
   ClientHeight = 379
   ClientWidth = 294
   Color = clBtnFace

@@ -156,6 +156,12 @@ type
     qryHashesACCESSLEVEL: TZIntegerField;
     qryHashesLASTACCESS: TZDateTimeField;
     qryLogView: TZQuery;
+    qryScreenItemsACTIONID: TZIntegerField;
+    qryScreenItemsACTIONVAL: TZIntegerField;
+    qryScreenItemsACTIONVALTYPE: TZIntegerField;
+    qryScreenItemsACTIONVALMIN: TZIntegerField;
+    qryScreenItemsACTIONVALMAX: TZIntegerField;
+    qryScreenItemsACTIONVALSTEP: TZIntegerField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }

@@ -130,7 +130,7 @@ object MainFrm: TMainFrm
     end
   end
   object MainMenu1: TMainMenu
-    Left = 728
+    Left = 688
     Top = 136
     object File1: TMenuItem
       Caption = '&File'
@@ -221,8 +221,8 @@ object MainFrm: TMainFrm
     Top = 72
   end
   object pmNard: TPopupMenu
-    Left = 664
-    Top = 240
+    Left = 688
+    Top = 200
     object AddNard1: TMenuItem
       Caption = 'Add Nard'
     end

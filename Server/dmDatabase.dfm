@@ -10,7 +10,6 @@ object dmDB: TdmDB
       'FirebirdAPI=legacy'
       'RawStringEncoding=DB_CP')
     TransactIsolationLevel = tiReadCommitted
-    Connected = True
     HostName = '192.168.0.51'
     Port = 0
     Database = 'NARDS'
@@ -493,8 +492,8 @@ object dmDB: TdmDB
     SQL.Strings = (
       'select * from ArdValues')
     Params = <>
-    Left = 248
-    Top = 88
+    Left = 312
+    Top = 80
     object qryNardValuesARDID: TZIntegerField
       FieldName = 'ARDID'
       Required = True
@@ -593,6 +592,24 @@ object dmDB: TdmDB
     end
     object qryScreenItemsDNSIZE: TZIntegerField
       FieldName = 'DNSIZE'
+    end
+    object qryScreenItemsACTIONID: TZIntegerField
+      FieldName = 'ACTIONID'
+    end
+    object qryScreenItemsACTIONVAL: TZIntegerField
+      FieldName = 'ACTIONVAL'
+    end
+    object qryScreenItemsACTIONVALTYPE: TZIntegerField
+      FieldName = 'ACTIONVALTYPE'
+    end
+    object qryScreenItemsACTIONVALMIN: TZIntegerField
+      FieldName = 'ACTIONVALMIN'
+    end
+    object qryScreenItemsACTIONVALMAX: TZIntegerField
+      FieldName = 'ACTIONVALMAX'
+    end
+    object qryScreenItemsACTIONVALSTEP: TZIntegerField
+      FieldName = 'ACTIONVALSTEP'
     end
   end
   object seqScreens: TZSequence

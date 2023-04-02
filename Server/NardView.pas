@@ -90,7 +90,7 @@ type
   public
     { Public declarations }
     // override the create method of the panel..
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent; aWidth:integer; aHeight:integer); reintroduce;
     // override the destroy and clean up things..
     destructor Destroy; override;
   published
@@ -149,7 +149,7 @@ type
 implementation
 
 
-constructor TNardView.Create(AOwner: TComponent);
+constructor TNardView.Create(AOwner: TComponent; aWidth:integer; aHeight:integer);
 begin
   inherited Create(AOwner);
 
@@ -160,10 +160,18 @@ begin
   BevelKind := bkNone;
   fShowText:=False;
  // StyleElements := [];
+   NardNumber := 1;
+  // set the size of the control..
+  Width := aWidth;
+  Height := aHeight;
+  Caption := '';
+  // default color on creation..
+  Color := clNavy;
+
   FNardImage := TImage.Create(Self);
   FNardImage.Parent := Self;
   FNardImage.Visible := True;
-  FNardImage.SetBounds(1, 1, 96, 96);
+  FNardImage.SetBounds(1, 1, Width, Height);
   FNardImage.Stretch := true;
   FNardImage.OnClick := DoClick;
   FNardImage.Transparent := False;
@@ -173,7 +181,7 @@ begin
   FIndicatorImage := TImage.Create(Self);
   FIndicatorImage.Parent := Self;
   FIndicatorImage.Visible := False;
-  FIndicatorImage.SetBounds(8, 61, 32, 32);
+  FIndicatorImage.SetBounds(8, 61, Width div 3, Height div 3);
   // FIndicatorImage.Stretch:=True;
   FIndicatorImage.Transparent := True;
   FIndicatorImage.OnClick := DoClick;
@@ -184,7 +192,7 @@ begin
 
   FNameLbl := CreateLbls('00:00');
   // position it..
-  FNameLbl.SetBounds(2, 8, 92, 25);
+  FNameLbl.SetBounds(2, 8, Width-4, 25);
   FNameLbl.AutoSize := False;
   FNameLbl.Font.Size := 8;
   FNameLbl.Font.Color := clBlack;
@@ -196,7 +204,7 @@ begin
 
   FDV1Lbl := CreateLbls('00.00');
   FDV1Lbl.AutoSize := False;
-  FDV1Lbl.SetBounds(2, 38, 92, 25);
+  FDV1Lbl.SetBounds(2, 38, Width-4, 25);
   FDV1Lbl.Alignment := taCenter;
   FDV1Lbl.Font.Size := 12;
   FDV1Lbl.Font.Style := [fsBold];
@@ -209,7 +217,7 @@ begin
 
   FDV2Lbl := CreateLbls('00.00');
   FDV2Lbl.AutoSize := False;
-  FDV2Lbl.SetBounds(2, 10, 92, 25);
+  FDV2Lbl.SetBounds(2, 10, Width-4, 25);
   FDV2Lbl.Transparent := true;
   FDV2Lbl.Font.Color := clBlack;
   FDV2Lbl.Font.Style := [fsBold];
@@ -235,15 +243,8 @@ begin
   fNardNumberLbl.StyleElements :=[];
   fNardNumberLbl.Visible :=false;
 
-  NardNumber := 1;
   // not on!!
   IsOn := False;
-  // set the size of the control..
-  Width := 96;
-  Height := 96;
-  Caption := '';
-  // default color on creation..
-  Color := clNavy;
 
   // assign our shared click event..
   OnClick := DoClick;

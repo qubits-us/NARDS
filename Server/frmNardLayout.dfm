@@ -3,9 +3,9 @@ object NardLayoutFrm: TNardLayoutFrm
   Top = 0
   BorderIcons = [biMinimize, biMaximize]
   BorderStyle = bsToolWindow
-  Caption = 'Nard Layout...'
-  ClientHeight = 347
-  ClientWidth = 607
+  Caption = 'Nard Item...'
+  ClientHeight = 326
+  ClientWidth = 655
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,216 +17,39 @@ object NardLayoutFrm: TNardLayoutFrm
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    607
-    347)
+    655
+    326)
   TextHeight = 15
   object lblItemID: TLabel
-    Left = 405
-    Top = 324
+    Left = 440
+    Top = 304
     Width = 70
     Height = 15
     Alignment = taRightJustify
     Anchors = []
     AutoSize = False
     Caption = 'lblItemID'
-  end
-  object lblNormal: TLabel
-    Left = 8
-    Top = 194
-    Width = 76
-    Height = 15
-    Caption = 'Normal Image'
-  end
-  object lblOffline: TLabel
-    Left = 8
-    Top = 144
-    Width = 72
-    Height = 15
-    Caption = 'Offline Image'
-  end
-  object lblAlert: TLabel
-    Left = 8
-    Top = 294
-    Width = 61
-    Height = 15
-    Caption = 'Alert Image'
-  end
-  object lnlID: TLabel
-    Left = 8
-    Top = 8
-    Width = 40
-    Height = 15
-    Caption = 'Nard ID'
-  end
-  object lblTop: TLabel
-    Left = 8
-    Top = 48
-    Width = 19
-    Height = 15
-    Caption = 'Top'
-  end
-  object lblLeft: TLabel
-    Left = 8
-    Top = 90
-    Width = 20
-    Height = 15
-    Caption = 'Left'
-  end
-  object lblHeight: TLabel
-    Left = 116
-    Top = 48
-    Width = 36
-    Height = 15
-    Caption = 'Height'
-    Visible = False
-  end
-  object lblWidth: TLabel
-    Left = 114
-    Top = 90
-    Width = 32
-    Height = 15
-    Caption = 'Width'
-    Visible = False
-  end
-  object lblOnImg: TLabel
-    Left = 8
-    Top = 244
-    Width = 52
-    Height = 15
-    Caption = 'On Image'
-  end
-  object lblNameTop: TLabel
-    Left = 528
-    Top = 192
-    Width = 54
-    Height = 15
-    Caption = 'Name Top'
-  end
-  object lblNameLeft: TLabel
-    Left = 528
-    Top = 232
-    Width = 55
-    Height = 15
-    Caption = 'Name Left'
-  end
-  object lblNameSize: TLabel
-    Left = 528
-    Top = 272
-    Width = 55
-    Height = 15
-    Caption = 'Name Size'
+    ExplicitLeft = 405
+    ExplicitTop = 324
   end
   object btnUpdate: TButton
-    Left = 513
-    Top = 320
+    Left = 566
+    Top = 296
     Width = 75
     Height = 25
-    Caption = 'Update'
+    Anchors = [akRight, akBottom]
+    Caption = 'Save'
     TabOrder = 0
     OnClick = btnUpdateClick
-  end
-  object edNardID: TEdit
-    Left = 8
-    Top = 24
-    Width = 82
-    Height = 23
-    TabOrder = 1
-    Text = '1'
-  end
-  object edLeft: TEdit
-    Left = 8
-    Top = 107
-    Width = 65
-    Height = 23
-    TabOrder = 2
-    Text = 'edLeft'
-    OnChange = edLeftChange
-  end
-  object edTop: TEdit
-    Left = 8
-    Top = 64
-    Width = 65
-    Height = 23
-    TabOrder = 3
-    Text = 'edTop'
-    OnChange = edTopChange
-  end
-  object edHeight: TEdit
-    Left = 116
-    Top = 64
-    Width = 65
-    Height = 23
-    TabOrder = 4
-    Visible = False
-    OnChange = edHeightChange
-  end
-  object edWidth: TEdit
-    Left = 116
-    Top = 107
-    Width = 65
-    Height = 23
-    TabOrder = 5
-    Visible = False
-    OnChange = edWidthChange
-  end
-  object edNormalImg: TEdit
-    Left = 8
-    Top = 215
-    Width = 202
-    Height = 23
-    TabOrder = 6
-    Text = 'default'
-  end
-  object btnSelectN: TButton
-    Left = 216
-    Top = 214
-    Width = 41
-    Height = 25
-    Caption = '...'
-    TabOrder = 7
-    OnClick = btnSelectNClick
-  end
-  object edOfflineImg: TEdit
-    Left = 8
-    Top = 165
-    Width = 202
-    Height = 23
-    TabOrder = 8
-    Text = 'default'
-  end
-  object edAlertImg: TEdit
-    Left = 8
-    Top = 315
-    Width = 202
-    Height = 23
-    TabOrder = 9
-    Text = 'default'
-  end
-  object btnSelectO: TButton
-    Left = 216
-    Top = 164
-    Width = 41
-    Height = 25
-    Caption = '...'
-    TabOrder = 10
-    OnClick = btnSelectOClick
-  end
-  object btnSelectA: TButton
-    Left = 216
-    Top = 314
-    Width = 41
-    Height = 25
-    Caption = '...'
-    TabOrder = 11
-    OnClick = btnSelectAClick
+    ExplicitTop = 342
   end
   object DBGrid1: TDBGrid
-    Left = 264
+    Left = 306
     Top = 8
     Width = 335
     Height = 120
     DataSource = dsScreenVals
-    TabOrder = 12
+    TabOrder = 1
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
     TitleFont.Height = -12
@@ -286,106 +109,420 @@ object NardLayoutFrm: TNardLayoutFrm
       end>
   end
   object btnAdd: TButton
-    Left = 280
+    Left = 320
     Top = 134
     Width = 75
     Height = 25
     Caption = 'Add'
-    TabOrder = 13
+    TabOrder = 2
     OnClick = btnAddClick
   end
   object btnEdit: TButton
-    Left = 400
+    Left = 440
     Top = 134
     Width = 75
     Height = 25
     Caption = 'Edit'
-    TabOrder = 14
+    TabOrder = 3
     OnClick = btnEditClick
   end
   object btnDelete: TButton
-    Left = 518
+    Left = 558
     Top = 134
     Width = 75
     Height = 25
     Caption = 'Delete'
-    TabOrder = 15
+    TabOrder = 4
     OnClick = btnDeleteClick
   end
-  object edOnImg: TEdit
-    Left = 8
-    Top = 265
-    Width = 202
-    Height = 23
-    TabOrder = 16
-    Text = 'default'
-  end
-  object Button1: TButton
-    Left = 216
-    Top = 264
-    Width = 41
-    Height = 25
-    Caption = '...'
-    TabOrder = 17
-  end
-  object edName: TEdit
-    Left = 104
-    Top = 24
-    Width = 145
-    Height = 23
-    TabOrder = 18
-    Text = 'edName'
-  end
-  object cbShowName: TCheckBox
-    Left = 104
-    Top = 6
-    Width = 97
-    Height = 17
-    Caption = 'Show name'
-    TabOrder = 19
-    OnClick = cbShowNameClick
-  end
-  object edVtop: TEdit
-    Left = 528
-    Top = 208
-    Width = 60
-    Height = 23
-    TabOrder = 20
-    Text = 'edVtop'
-  end
-  object edVLeft: TEdit
-    Left = 528
-    Top = 248
-    Width = 60
-    Height = 23
-    TabOrder = 21
-    Text = 'edVLeft'
-  end
-  object edVSize: TEdit
-    Left = 528
-    Top = 288
-    Width = 60
-    Height = 23
-    TabOrder = 22
-    Text = 'edVSize'
-  end
   object btnSetV: TButton
-    Left = 524
-    Top = 165
-    Width = 64
+    Left = 306
+    Top = 296
+    Width = 75
     Height = 25
+    Anchors = [akRight, akBottom]
     Caption = 'Show'
-    TabOrder = 23
+    TabOrder = 5
     OnClick = btnSetVClick
+    ExplicitTop = 342
+  end
+  object PageControl1: TPageControl
+    Left = 8
+    Top = 3
+    Width = 292
+    Height = 286
+    ActivePage = tsGen
+    TabOrder = 6
+    object tsGen: TTabSheet
+      Caption = 'Main'
+      object lnlID: TLabel
+        Left = 8
+        Top = 8
+        Width = 40
+        Height = 15
+        Caption = 'Nard ID'
+      end
+      object lblTop: TLabel
+        Left = 8
+        Top = 48
+        Width = 19
+        Height = 15
+        Caption = 'Top'
+      end
+      object lblHeight: TLabel
+        Left = 116
+        Top = 48
+        Width = 36
+        Height = 15
+        Caption = 'Height'
+      end
+      object lblLeft: TLabel
+        Left = 8
+        Top = 90
+        Width = 20
+        Height = 15
+        Caption = 'Left'
+      end
+      object lblWidth: TLabel
+        Left = 114
+        Top = 90
+        Width = 32
+        Height = 15
+        Caption = 'Width'
+      end
+      object edNardID: TEdit
+        Left = 8
+        Top = 24
+        Width = 82
+        Height = 23
+        TabOrder = 0
+        Text = '1'
+      end
+      object cbShowName: TCheckBox
+        Left = 104
+        Top = 6
+        Width = 97
+        Height = 17
+        Caption = 'Show name'
+        TabOrder = 1
+        OnClick = cbShowNameClick
+      end
+      object edName: TEdit
+        Left = 104
+        Top = 24
+        Width = 145
+        Height = 23
+        TabOrder = 2
+        Text = 'edName'
+      end
+      object edHeight: TEdit
+        Left = 116
+        Top = 64
+        Width = 65
+        Height = 23
+        TabOrder = 3
+        OnChange = edHeightChange
+      end
+      object edTop: TEdit
+        Left = 8
+        Top = 64
+        Width = 65
+        Height = 23
+        TabOrder = 4
+        Text = '0'
+        OnChange = edTopChange
+      end
+      object edWidth: TEdit
+        Left = 116
+        Top = 107
+        Width = 65
+        Height = 23
+        TabOrder = 5
+        OnChange = edWidthChange
+      end
+      object edLeft: TEdit
+        Left = 8
+        Top = 107
+        Width = 65
+        Height = 23
+        TabOrder = 6
+        Text = '0'
+        OnChange = edLeftChange
+      end
+      object GroupBox1: TGroupBox
+        Left = 4
+        Top = 136
+        Width = 185
+        Height = 116
+        Caption = 'Name'
+        TabOrder = 7
+        object lblNameSize: TLabel
+          Left = 88
+          Top = 20
+          Width = 20
+          Height = 15
+          Caption = 'Size'
+        end
+        object lblNameLeft: TLabel
+          Left = 14
+          Top = 64
+          Width = 20
+          Height = 15
+          Caption = 'Left'
+        end
+        object lblNameTop: TLabel
+          Left = 14
+          Top = 20
+          Width = 19
+          Height = 15
+          Caption = 'Top'
+        end
+        object edVLeft: TEdit
+          Left = 14
+          Top = 80
+          Width = 60
+          Height = 23
+          TabOrder = 0
+          Text = '0'
+        end
+        object edVSize: TEdit
+          Left = 88
+          Top = 40
+          Width = 60
+          Height = 23
+          TabOrder = 1
+          Text = '10'
+        end
+        object edVtop: TEdit
+          Left = 14
+          Top = 40
+          Width = 60
+          Height = 23
+          TabOrder = 2
+          Text = '0'
+        end
+      end
+    end
+    object tsImg: TTabSheet
+      Caption = 'Images'
+      ImageIndex = 1
+      object lblAlert: TLabel
+        Left = 8
+        Top = 163
+        Width = 61
+        Height = 15
+        Caption = 'Alert Image'
+      end
+      object lblOnImg: TLabel
+        Left = 8
+        Top = 113
+        Width = 52
+        Height = 15
+        Caption = 'On Image'
+      end
+      object lblNormal: TLabel
+        Left = 8
+        Top = 63
+        Width = 76
+        Height = 15
+        Caption = 'Normal Image'
+      end
+      object lblOffline: TLabel
+        Left = 8
+        Top = 13
+        Width = 72
+        Height = 15
+        Caption = 'Offline Image'
+      end
+      object edNormalImg: TEdit
+        Left = 8
+        Top = 84
+        Width = 202
+        Height = 23
+        TabOrder = 0
+        Text = 'default'
+      end
+      object edAlertImg: TEdit
+        Left = 8
+        Top = 184
+        Width = 202
+        Height = 23
+        TabOrder = 1
+        Text = 'default'
+      end
+      object btnSelectA: TButton
+        Left = 224
+        Top = 183
+        Width = 41
+        Height = 25
+        Caption = '...'
+        TabOrder = 2
+        OnClick = btnSelectAClick
+      end
+      object Button1: TButton
+        Left = 224
+        Top = 133
+        Width = 41
+        Height = 25
+        Caption = '...'
+        TabOrder = 3
+      end
+      object edOnImg: TEdit
+        Left = 8
+        Top = 134
+        Width = 202
+        Height = 23
+        TabOrder = 4
+        Text = 'default'
+      end
+      object btnSelectN: TButton
+        Left = 224
+        Top = 83
+        Width = 41
+        Height = 25
+        Caption = '...'
+        TabOrder = 5
+        OnClick = btnSelectNClick
+      end
+      object btnSelectO: TButton
+        Left = 224
+        Top = 33
+        Width = 41
+        Height = 25
+        Caption = '...'
+        TabOrder = 6
+        OnClick = btnSelectOClick
+      end
+      object edOfflineImg: TEdit
+        Left = 8
+        Top = 34
+        Width = 202
+        Height = 23
+        TabOrder = 7
+        Text = 'default'
+      end
+    end
+    object tsAct: TTabSheet
+      Caption = 'Action'
+      ImageIndex = 2
+      object lblMax: TLabel
+        Left = 112
+        Top = 157
+        Width = 23
+        Height = 15
+        Caption = 'Max'
+      end
+      object lblValMin: TLabel
+        Left = 8
+        Top = 157
+        Width = 21
+        Height = 15
+        Caption = 'Min'
+      end
+      object lblStepBy: TLabel
+        Left = 8
+        Top = 112
+        Width = 23
+        Height = 15
+        Caption = 'Step'
+      end
+      object cmbValType: TLabel
+        Left = 104
+        Top = 63
+        Width = 55
+        Height = 15
+        Caption = 'Value Type'
+      end
+      object Label1: TLabel
+        Left = 8
+        Top = 63
+        Width = 41
+        Height = 15
+        Caption = 'Value Id'
+      end
+      object lblAction: TLabel
+        Left = 8
+        Top = 13
+        Width = 35
+        Height = 15
+        Caption = 'Action'
+      end
+      object cmbAction: TComboBox
+        Left = 8
+        Top = 34
+        Width = 217
+        Height = 23
+        Style = csDropDownList
+        TabOrder = 0
+        OnChange = cmbActionChange
+        Items.Strings = (
+          'None'
+          'Show Nard Info'
+          'Execute Command'
+          'Toggle Value'
+          'Adjust Value'
+          'Show Nard Images')
+      end
+      object EdMin: TEdit
+        Left = 8
+        Top = 178
+        Width = 82
+        Height = 23
+        TabOrder = 1
+        Text = '0'
+      end
+      object edMax: TEdit
+        Left = 112
+        Top = 178
+        Width = 82
+        Height = 23
+        TabOrder = 2
+        Text = '1'
+      end
+      object edStep: TEdit
+        Left = 8
+        Top = 128
+        Width = 67
+        Height = 23
+        TabOrder = 3
+        Text = '1'
+      end
+      object cmbActionValType: TComboBox
+        Left = 104
+        Top = 80
+        Width = 121
+        Height = 23
+        Style = csDropDownList
+        ItemIndex = 0
+        TabOrder = 4
+        Text = 'Byte'
+        Items.Strings = (
+          'Byte'
+          'Word'
+          'int16'
+          'int32'
+          'uint32'
+          'Single'
+          'Double')
+      end
+      object edValID: TEdit
+        Left = 8
+        Top = 80
+        Width = 65
+        Height = 23
+        TabOrder = 5
+        Text = '0'
+      end
+    end
   end
   object dlgSelPic: TOpenPictureDialog
     Title = 'Select image...'
-    Left = 280
-    Top = 280
+    Left = 528
+    Top = 208
   end
   object dsScreenVals: TDataSource
     DataSet = dmDB.qryScreenVals
-    Left = 280
-    Top = 256
+    Left = 376
+    Top = 208
   end
 end
