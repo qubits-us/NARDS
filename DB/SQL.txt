@@ -143,7 +143,7 @@ create table Sketches
    Stamp timestamp not null,
    ArdID  integer,
    Ver decimal(8,4),
-   Sketch  blob (,1),
+   Sketch  blob (,0),
    FileName varchar(512)
    );
 
