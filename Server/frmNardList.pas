@@ -120,9 +120,18 @@ procedure TNardListFrm.btnFirmwareClick(Sender: TObject);
 var
 aFrm:tFirmwareListFrm;
 begin
-aFrm:=tFirmwareListFrm.Create(application);
-aFrm.ShowModal;
-aFrm.Free;
+if dmDb.ArdsQry.RecordCount>0 then
+ begin
+  dmDb.qryFirmwareList.Active:=false;
+  dmDb.qryFirmwareList.SQL.Clear;
+  dmDb.qryFirmwareList.SQL.Add('select * from firmwares where ardid='+IntToStr(dmDb.ArdsQryARDID.Value));
+  dmDb.qryFirmwareList.Active:=true;
+  aFrm:=tFirmwareListFrm.Create(application);
+  aFrm.NardID:=dmDb.ArdsQryARDID.Value;
+  aFrm.ShowModal;
+  aFrm.Free;
+  dmDb.qryFirmwareList.Active:=false;
+ end;
 
 end;
 
@@ -144,9 +153,18 @@ var
 aFrm:tSourceListFrm;
 begin
 //view the source list
-aFrm:=tSourceListFrm.Create(application);
-aFrm.ShowModal;
-aFrm.Free;
+if dmDb.ArdsQry.RecordCount>0 then
+ begin
+  dmDb.qrySourceList.Active:=false;
+  dmDb.qrySourceList.SQL.Clear;
+  dmDb.qrySourceList.SQL.Add('select * from sketches where ardid='+IntToStr(dmDb.ArdsQryARDID.Value));
+  dmDb.qrySourceList.Active:=true;
+  aFrm:=tSourceListFrm.Create(application);
+  aFrm.NardId:=dmDb.ArdsQryARDID.Value;
+  aFrm.ShowModal;
+  aFrm.Free;
+  dmDb.qrySourceList.Active:=false;
+ end;
 end;
 
 procedure TNardListFrm.FormCreate(Sender: TObject);

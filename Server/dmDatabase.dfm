@@ -831,13 +831,12 @@ object dmDB: TdmDB
       FieldName = 'VER'
       Precision = 8
     end
-    object qrySourceListSKETCH: TZUnicodeCLobField
-      FieldName = 'SKETCH'
-      BlobType = ftWideMemo
-    end
     object qrySourceListFILENAME: TZUnicodeStringField
       FieldName = 'FILENAME'
       Size = 512
+    end
+    object qrySourceListSKETCH: TZBlobField
+      FieldName = 'SKETCH'
     end
   end
   object seqSketchID: TZSequence
@@ -870,6 +869,14 @@ object dmDB: TdmDB
     end
     object qryFirmwareListFIRMWARE: TZBlobField
       FieldName = 'FIRMWARE'
+    end
+    object qryFirmwareListFILENAME: TZUnicodeStringField
+      FieldName = 'FILENAME'
+      Size = 200
+    end
+    object qryFirmwareListNOTE: TZUnicodeStringField
+      FieldName = 'NOTE'
+      Size = 500
     end
   end
   object seqFirmwareId: TZSequence

@@ -98,7 +98,6 @@ object NardListFrm: TNardListFrm
     Caption = 'Close'
     TabOrder = 1
     OnClick = BtnCloseClick
-    ExplicitLeft = 320
   end
   object btnNew: TButton
     Left = 8

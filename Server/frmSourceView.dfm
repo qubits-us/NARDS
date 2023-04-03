@@ -2,8 +2,8 @@ object SourceViewFrm: TSourceViewFrm
   Left = 0
   Top = 0
   Caption = 'NARD Source View'
-  ClientHeight = 441
-  ClientWidth = 624
+  ClientHeight = 502
+  ClientWidth = 666
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,9 +16,9 @@ object SourceViewFrm: TSourceViewFrm
   TextHeight = 15
   object seSource: TSynEdit
     Left = 0
-    Top = 33
-    Width = 624
-    Height = 408
+    Top = 0
+    Width = 666
+    Height = 469
     Align = alClient
     Color = clBlack
     ActiveLineColor = clTeal
@@ -59,26 +59,31 @@ object SourceViewFrm: TSourceViewFrm
       'seSource')
     RightEdgeColor = clGray
     SelectedColor.Alpha = 0.400000005960464500
-    ExplicitLeft = 144
-    ExplicitTop = 88
-    ExplicitWidth = 200
-    ExplicitHeight = 150
+    ExplicitTop = 33
+    ExplicitWidth = 624
+    ExplicitHeight = 408
   end
   object Panel1: TPanel
     Left = 0
-    Top = 0
-    Width = 624
+    Top = 469
+    Width = 666
     Height = 33
-    Align = alTop
+    Align = alBottom
     TabOrder = 1
-    object Button1: TButton
-      Left = 0
-      Top = 5
+    ExplicitTop = 0
+    ExplicitWidth = 624
+    DesignSize = (
+      666
+      33)
+    object btnClose: TButton
+      Left = 584
+      Top = 4
       Width = 75
       Height = 25
+      Anchors = [akTop, akRight]
       Caption = 'Close'
       TabOrder = 0
-      OnClick = Button1Click
+      OnClick = btnCloseClick
     end
   end
   object SynCppSyn1: TSynCppSyn

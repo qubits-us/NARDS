@@ -11,10 +11,10 @@ type
     seSource: TSynEdit;
     SynCppSyn1: TSynCppSyn;
     Panel1: TPanel;
-    Button1: TButton;
+    btnClose: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure Button1Click(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -28,7 +28,7 @@ implementation
 
 {$R *.dfm}
 
-procedure TSourceViewFrm.Button1Click(Sender: TObject);
+procedure TSourceViewFrm.btnCloseClick(Sender: TObject);
 begin
 ModalResult:=mrOK;
 end;

@@ -4,8 +4,8 @@ object FirmwareListFrm: TFirmwareListFrm
   BorderIcons = [biSystemMenu]
   BorderStyle = bsToolWindow
   Caption = 'NARD : Firmwares...'
-  ClientHeight = 399
-  ClientWidth = 443
+  ClientHeight = 370
+  ClientWidth = 445
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,13 +14,27 @@ object FirmwareListFrm: TFirmwareListFrm
   Font.Style = []
   Position = poOwnerFormCenter
   TextHeight = 15
-  object DBGrid1: TDBGrid
+  object dTxtFileName: TDBText
+    Left = 24
+    Top = 192
+    Width = 393
+    Height = 17
+    DataField = 'FILENAME'
+    DataSource = dsFirmwares
+  end
+  object lblNotes: TLabel
+    Left = 16
+    Top = 220
+    Width = 31
+    Height = 15
+    Caption = 'Notes'
+  end
+  object dbgFirmwares: TDBGrid
     Left = 16
     Top = 8
     Width = 409
-    Height = 337
-    DataSource = DataSource1
-    ReadOnly = True
+    Height = 177
+    DataSource = dsFirmwares
     TabOrder = 0
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
@@ -31,12 +45,14 @@ object FirmwareListFrm: TFirmwareListFrm
       item
         Expanded = False
         FieldName = 'FIRMID'
+        ReadOnly = True
         Title.Caption = 'Id'
         Visible = True
       end
       item
         Expanded = False
         FieldName = 'ARDID'
+        ReadOnly = True
         Title.Caption = 'Nard Id'
         Visible = True
       end
@@ -50,47 +66,68 @@ object FirmwareListFrm: TFirmwareListFrm
       item
         Expanded = False
         FieldName = 'STAMP'
+        ReadOnly = True
         Title.Caption = 'Last Edit'
         Width = 160
         Visible = True
       end>
   end
-  object Button1: TButton
-    Left = 16
-    Top = 366
+  object btnAdd: TButton
+    Left = 175
+    Top = 340
     Width = 75
     Height = 25
     Caption = 'Add'
     TabOrder = 1
+    OnClick = btnAddClick
   end
-  object Button2: TButton
-    Left = 113
-    Top = 366
-    Width = 75
-    Height = 25
-    Caption = 'Remove'
-    TabOrder = 2
-  end
-  object Button3: TButton
-    Left = 216
-    Top = 366
+  object btnLoad: TButton
+    Left = 256
+    Top = 340
     Width = 75
     Height = 25
     Caption = 'Load'
-    TabOrder = 3
+    TabOrder = 2
+    OnClick = btnLoadClick
   end
-  object Button4: TButton
+  object btnClose: TButton
     Left = 350
-    Top = 366
+    Top = 340
     Width = 75
     Height = 25
     Caption = 'Close'
-    TabOrder = 4
-    OnClick = Button4Click
+    TabOrder = 3
+    OnClick = btnCloseClick
   end
-  object DataSource1: TDataSource
+  object dbNotes: TDBMemo
+    Left = 16
+    Top = 240
+    Width = 401
+    Height = 81
+    DataField = 'NOTE'
+    DataSource = dsFirmwares
+    MaxLength = 500
+    TabOrder = 4
+  end
+  object DBNavigator1: TDBNavigator
+    Left = 7
+    Top = 340
+    Width = 162
+    Height = 25
+    DataSource = dsFirmwares
+    VisibleButtons = [nbPrior, nbNext, nbDelete, nbPost, nbCancel, nbRefresh]
+    TabOrder = 5
+  end
+  object dsFirmwares: TDataSource
     DataSet = dmDB.qryFirmwareList
-    Left = 64
-    Top = 248
+    Left = 368
+    Top = 296
+  end
+  object dlgSelectBin: TOpenDialog
+    DefaultExt = '*.bin'
+    FileName = '*.bin'
+    Title = 'Select firmware file to add..'
+    Left = 296
+    Top = 296
   end
 end

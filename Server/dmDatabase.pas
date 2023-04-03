@@ -137,7 +137,6 @@ type
     qrySourceListSTAMP: TZDateTimeField;
     qrySourceListARDID: TZIntegerField;
     qrySourceListVER: TZBCDField;
-    qrySourceListSKETCH: TZUnicodeCLobField;
     qrySourceListFILENAME: TZUnicodeStringField;
     seqSketchID: TZSequence;
     qryFirmwareList: TZQuery;
@@ -162,6 +161,9 @@ type
     qryScreenItemsACTIONVALMIN: TZIntegerField;
     qryScreenItemsACTIONVALMAX: TZIntegerField;
     qryScreenItemsACTIONVALSTEP: TZIntegerField;
+    qryFirmwareListFILENAME: TZUnicodeStringField;
+    qryFirmwareListNOTE: TZUnicodeStringField;
+    qrySourceListSKETCH: TZBlobField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }

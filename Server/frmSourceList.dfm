@@ -14,38 +14,32 @@ object SourceListFrm: TSourceListFrm
   Font.Style = []
   Position = poOwnerFormCenter
   TextHeight = 15
-  object Button1: TButton
+  object btnView: TButton
     Left = 8
-    Top = 376
+    Top = 377
     Width = 75
     Height = 25
     Caption = 'View'
     TabOrder = 0
+    OnClick = btnViewClick
   end
-  object Button2: TButton
+  object btnAdd: TButton
     Left = 89
     Top = 377
     Width = 75
     Height = 25
     Caption = 'Add'
     TabOrder = 1
+    OnClick = btnAddClick
   end
-  object Button3: TButton
-    Left = 170
-    Top = 377
-    Width = 75
-    Height = 25
-    Caption = 'Remove'
-    TabOrder = 2
-  end
-  object DBGrid1: TDBGrid
+  object dbSource: TDBGrid
     Left = 8
     Top = 8
     Width = 481
     Height = 362
     DataSource = dsSource
     ReadOnly = True
-    TabOrder = 3
+    TabOrder = 2
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
     TitleFont.Height = -12
@@ -87,18 +81,34 @@ object SourceListFrm: TSourceListFrm
         Visible = True
       end>
   end
-  object Button4: TButton
+  object btnClose: TButton
     Left = 418
     Top = 377
     Width = 75
     Height = 25
     Caption = 'Close'
+    TabOrder = 3
+    OnClick = btnCloseClick
+  end
+  object dbNav: TDBNavigator
+    Left = 184
+    Top = 377
+    Width = 180
+    Height = 25
+    DataSource = dsSource
+    VisibleButtons = [nbPrior, nbNext, nbDelete, nbPost, nbCancel, nbRefresh]
     TabOrder = 4
-    OnClick = Button4Click
   end
   object dsSource: TDataSource
     DataSet = dmDB.qrySourceList
     Left = 16
     Top = 320
+  end
+  object dlgSelectBin: TOpenDialog
+    DefaultExt = '*.ino'
+    FileName = '*.ino'
+    Title = 'Select file to add..'
+    Left = 296
+    Top = 296
   end
 end
