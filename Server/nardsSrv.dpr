@@ -27,7 +27,8 @@ uses
   frmManageLogs in 'frmManageLogs.pas' {ManageLogsFrm},
   frmLogView in 'frmLogView.pas' {LogViewFrm},
   frmNardValAdj in 'frmNardValAdj.pas' {NardValAdjFrm},
-  frmNardImages in 'frmNardImages.pas' {NardImagesFrm};
+  frmNardImages in 'frmNardImages.pas' {NardImagesFrm},
+  frmSourceOptions in 'frmSourceOptions.pas' {SourceOptionsFrm};
 
 {$R *.res}
 
