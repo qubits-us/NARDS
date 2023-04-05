@@ -14,8 +14,16 @@ type
     lblEnd: TLabel;
     btnClose: TButton;
     btnPreview: TButton;
+    edNards: TEdit;
+    cbAllNards: TCheckBox;
+    lblNards: TLabel;
+    cbAllVars: TCheckBox;
+    edVarId: TEdit;
+    Label2: TLabel;
     procedure btnCloseClick(Sender: TObject);
     procedure btnPreviewClick(Sender: TObject);
+    procedure cbAllNardsClick(Sender: TObject);
+    procedure cbAllVarsClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -56,7 +64,20 @@ if aEnd<aStart then
   dmDb.qryLogRpt.SQL.Add('where');
   dmDb.qryLogRpt.SQL.Add('l.Stamp BETWEEN CAST('''+FormatDateTime('yyyy-mm-dd hh:nn:ss',aStart)+
                           ''' AS TIMESTAMP) AND CAST('''+FormatDateTime('yyyy-mm-dd hh:nn:ss',aEnd)+''' AS TIMESTAMP) ');
+if not cbAllNards.Checked then
+  dmDb.qryLogRpt.SQL.Add('AND ARDID='+edNards.Text);
+if not cbAllVars.Checked then
+  dmDb.qryLogRpt.SQL.Add('AND VALUEINDEX='+edVarId.Text);
+
+ try
   dmDb.qryLogRpt.Active:=true;
+ except on e:exception do
+   begin
+     ShowMessage('SQL Error:'+e.Message);
+     exit;
+   end;
+
+ end;
   aFrm:=tReportPreviewFrm.Create(application);
   dmDb.rptLogs.Preview:=aFrm.rptPreview;
   dmDb.rptLogs.ShowReport(true);
@@ -65,6 +86,29 @@ if aEnd<aStart then
 
 
 
+end;
+
+procedure TReportLogsFrm.cbAllNardsClick(Sender: TObject);
+begin
+if cbAllNards.Checked then
+  begin
+   edNards.Enabled:=false;
+  end else
+    begin
+    edNards.Enabled:=true;
+
+    end;
+end;
+
+procedure TReportLogsFrm.cbAllVarsClick(Sender: TObject);
+begin
+if cbAllVars.Checked then
+  begin
+   edVarId.Enabled:=false;
+  end else
+     begin
+     edVarId.Enabled:=true;
+     end;
 end;
 
 end.
