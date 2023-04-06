@@ -60,7 +60,7 @@ struct __attribute__((__packed__)) NardPacket {
   byte     Ident[2];
   byte     Command;
   byte     Options[4];
-  uint32_t DataSize;//increased from word 3.31.2023 ~q
+  uint32_t DataSize;
 };
 
 //nard reg packet..
@@ -94,6 +94,7 @@ public:
   typedef bool    (*FloatSet) (const uint8_t, const float);  
   typedef bool    (*ExeCmd)   (const uint8_t); 
   typedef void    (*HashResp) (const bool);
+  typedef void    (*ImgGet)   (void);
   bool setPingInterval(uint16_t interval); 
   bool setReg(char *str, uint16_t id, uint16_t group, uint16_t process); 
   bool connected();
@@ -106,6 +107,7 @@ public:
   void onFloats(FloatGet getFloat, FloatSet setFloat);
   void onCommand(ExeCmd cmdExe);
   void onHashResp(HashResp respHash);
+  void onImage(ImgGet getImg);
   void poll();
   //sets and logs a var..
   bool logVar(const uint8_t index, const uint8_t val);
@@ -160,6 +162,7 @@ private:
   FloatGet  _floatGet;
   ExeCmd  _exeCmd;
   HashResp _hashResp;
+  ImgGet _imgGet;
   bool _checkIncoming();
   void _reconnect();
   bool _processGet();
@@ -177,6 +180,7 @@ private:
   bool _setUInt32();
   bool _getFloat();
   bool _setFloat();
+  bool _getImg();
   bool _onExec();
   void _processIncoming();  
   void _processACK();

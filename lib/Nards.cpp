@@ -25,6 +25,7 @@
    _uint32Set = nullptr;
    _floatGet = nullptr;
    _floatSet = nullptr;
+   _imgGet = nullptr;
    _hashResp = nullptr;
    _displayName = "Nard\0";
    _ipAddress = "0.0.0.0\0";
@@ -87,6 +88,9 @@ void Nard::onHashResp(HashResp respHash) {
   _hashResp = respHash;
 }
 
+void Nard::onImage(ImgGet getImg) {
+  _imgGet = getImg;
+}
 
 bool Nard::setPingInterval(uint16_t interval) {
   bool result = false;
@@ -301,6 +305,11 @@ bool Nard::_processGet() {
       case SG_FLT4:
       {
         _getFloat();
+        break;
+      }
+      case SG_JPG:
+      {
+        _getImg();
         break;
       }
 }
@@ -1032,6 +1041,16 @@ bool Nard::getVar(const uint8_t index, const uint8_t type){
     if (sent == sizeof(NardPacket)) fail = false;
   }
   return !fail;
+}
+
+bool Nard::_getImg(void){
+  bool fail = true;
+  if (!_registered) return !fail;
+    if (_started) {
+     if (_imgGet != nullptr) {
+    _imgGet();
+     }
+    }  
 }
 
 bool Nard::setJpg(const uint8_t *buff, const int32_t size){

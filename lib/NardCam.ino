@@ -24,8 +24,8 @@
 camera_config_t config;
 
 
-const char *ssid = "PeanutButter";
-const char *password = "rasberries";
+const char *ssid = "Jelly";
+const char *password = "2019jammified";
 
 char *host = "192.168.0.51";  // IP of nards server
 int port = 12000;             // server port
@@ -58,6 +58,7 @@ int   IntArray[5];
 float FloatArray[5];
 float temp = 80.4;
 
+void OnJpg(void);
 bool OnGetByte(const uint8_t index, uint8_t* value);
 bool OnSetByte(const uint8_t index,const uint8_t value);
 bool OnGetWord(const uint8_t index, uint16_t* value);
@@ -99,13 +100,14 @@ void setup(void) {
   nard.onInts(OnGetInt, OnSetInt);
   nard.onFloats(OnGetFloat, OnSetFloat);
   nard.onCommand(OnExeCommand);
+  nard.onImage(OnJpg);
   nard.setReg("Nard X", 1, 0, 0);
 
   if (nard.begin(host, port)) {
     Serial.println("Nard connected..");
   }
   
-  Serial.println("Commands: SET GET TEMP STAT CONN RECON");
+  Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG");
 }
 
 
@@ -181,7 +183,7 @@ void CheckForCommand(){
          case 5:CmdReConn(); break;
          case 6:SendJpg(); break;
      }    
-     Serial.println("Commands: SET GET TEMP STAT CONN RECON");
+     Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG");
     CommandRecv = false;
     CharCounter = 0;
     ZeroBuffer();
@@ -289,6 +291,10 @@ void ZeroBuffer() {
 }
 
 
+
+void OnJpg(){
+  SendJpg();
+}
 
 
 
