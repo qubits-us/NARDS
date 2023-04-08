@@ -176,3 +176,30 @@ create table LogHash
 
 create index HashLogByStamp on LogHash (Stamp);
 
+CREATE TABLE ArdParams
+(
+    ArdID integer not null,
+    ParamIndex integer not null,
+    DisplayName varchar(20),
+    Param1 integer,
+    Param2 integer,
+    Param3 integer,
+    Param4 integer
+    );
+    
+create index ParamsByArd on ArdParams (ArdID, ParamIndex);   
+
+
+create table LogParams
+(
+    Stamp timestamp,
+    ArdID  integer,
+    ParamIndex integer,
+    Param1 integer,
+    Param2 integer,
+    Param3 integer,
+    Param4 integer
+   );
+   
+create index ParamLogByArd on LogParams (ArdID,Stamp);  
+ 
