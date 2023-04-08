@@ -26,6 +26,8 @@
    _floatGet = nullptr;
    _floatSet = nullptr;
    _imgGet = nullptr;
+   _paramGet = nullptr;
+   _paramSet = nullptr;
    _hashResp = nullptr;
    _displayName = "Nard\0";
    _ipAddress = "0.0.0.0\0";
@@ -82,6 +84,11 @@ void Nard::onFloats(FloatGet getFloat, FloatSet setFloat) {
 
 void Nard::onCommand(ExeCmd cmdExe) {
   _exeCmd = cmdExe;
+}
+
+void Nard::onParams(ParamGet getParam, ParamSet setParam){
+  _paramGet = getParam;
+  _paramSet = setParam;
 }
 
 void Nard::onHashResp(HashResp respHash) {
@@ -217,6 +224,18 @@ void Nard::_processIncoming() {
       case CMD_HASH:
       {
         _respHash();
+        break;
+      }
+      case  CMD_PARAMS:
+      {
+        if (_hdr.Options[0]==PARAM_GET){
+          _getParam();
+        } else
+        {
+          if (_hdr.Options[0]==PARAM_SET){
+            _setParam();
+          }
+        }
         break;
       }
 }
@@ -775,6 +794,85 @@ bool Nard::_setFloat() {
   }
 }
 
+
+bool Nard::_setParam(){
+  bool result = false;
+  if (_paramSet != nullptr) {
+    int16_t params[4];
+    memcpy(&params,&_buff,sizeof(params));
+    result = _paramSet(_hdr.Options[1], params[0],params[1],params[2],params[3]);
+    if (result) {
+      //good result
+      //send an ack back
+      _hdr.Command = CMD_ACK;
+      _hdr.Options[0] = CMD_PARAMS;
+      _hdr.DataSize = 0;
+      int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+      result = (sent == sizeof(NardPacket));
+    } else {
+      //bad result..
+      //send an nak back
+      _hdr.Command = CMD_NAK;
+      _hdr.Options[0] = CMD_PARAMS;
+      _hdr.DataSize = 0;
+      int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+      result = (sent == sizeof(NardPacket));
+    }
+  } else {
+    //no call back set..
+    //send an nak back
+    _hdr.Command = CMD_NAK;
+    _hdr.Options[0] = CMD_PARAMS;
+    _hdr.DataSize = 0;
+    int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+    result = (sent == sizeof(NardPacket));
+  }
+  
+}
+
+//server wants some params..
+bool Nard::_getParam() {
+  int16_t params[4];
+  bool good;
+  if (_paramGet != nullptr) {
+    good = _paramGet(_hdr.Options[1],&params[0],&params[1],&params[2],&params[3]);
+    if (good) {
+      //got it, thanks...
+      _hdr.Command = CMD_PARAMS;
+      _hdr.Options[0] = PARAM_SET;
+      //leave 1 alone..
+      _hdr.Options[2] = 0;
+      _hdr.Options[3] = 0;
+      _hdr.DataSize = sizeof(params);
+      //zero buff
+      memset(_buff, 0, sizeof(_buff));
+      memcpy(&_buff,&_hdr,sizeof(_hdr));
+      memcpy(&_buff[sizeof(_hdr)],&params,sizeof(params));
+      int sent = _nard.write((uint8_t *)&_buff, sizeof(NardPacket) + _hdr.DataSize);
+      good = (sent == sizeof(NardPacket) + _hdr.DataSize);
+    } else {
+      //bad result..
+      //send nak
+      _hdr.Command = CMD_NAK;
+      _hdr.Options[0] = CMD_PARAMS;
+      _hdr.DataSize = 0;
+      int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+      good = (sent == sizeof(NardPacket));
+    }
+
+  } else {
+    //no call back, send nak
+    _hdr.Command = CMD_NAK;
+    _hdr.Options[0] = CMD_PARAMS;
+    _hdr.DataSize = 0;
+    int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+    good = (sent == sizeof(NardPacket));
+  }
+  return good;
+}
+
+
+
 //set and log a byte..
 bool Nard::logVar(const uint8_t index, const uint8_t val){
   //set and log a byte
@@ -1025,6 +1123,36 @@ if (_started) {
   return result;
   
 }
+
+
+bool Nard::setParams(const uint8_t index, const int16_t p1, const int16_t p2, const int16_t p3, const int16_t p4){
+   //sends Params to server
+bool result = false;
+int16_t params[4];
+  if (!_registered) return false;
+if (_started) {
+    NardParamPacket pack;
+    pack.Hdr.Ident[0] = IDENT_HI;
+    pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.Command = CMD_PARAMS;
+    pack.Hdr.Options[0] = PARAM_SET;
+    pack.Hdr.Options[1] = index;
+    pack.Hdr.Options[3] = 0;
+    pack.Hdr.Options[2] = 0;
+    pack.Hdr.DataSize = sizeof(params);
+    pack.params[0]=p1;
+    pack.params[1]=p2;
+    pack.params[2]=p3;
+    pack.params[3]=p4;
+    int sent = _nard.write((uint8_t *)&pack, sizeof(NardParamPacket));
+    if (sent == sizeof(NardParamPacket)) result = true;
+  }   
+  return result;
+}
+
+
+
+
 
 bool Nard::getVar(const uint8_t index, const uint8_t type){
   bool fail = true;

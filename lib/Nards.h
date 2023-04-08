@@ -27,6 +27,7 @@
 #define CMD_EXE     5
 #define CMD_SETNLOG 6
 #define CMD_HASH    7
+#define CMD_PARAMS  8
 #define CMD_OTA  99
 
 //Defines for Set and Get
@@ -43,6 +44,10 @@
 #define HASH_CHECK  0
 #define HASH_PASS 1
 #define HASH_FAIL 2
+//param command options 0, index in 1
+#define PARAM_GET 0
+#define PARAM_SET 1
+#define PARAM_SETNLOG 2
 
 //registration structure
 struct __attribute__((__packed__)) NardReg {
@@ -75,6 +80,13 @@ struct __attribute__((__packed__)) NardBuff4Packet {
  byte       buf[4];
 };
 
+//nard param packet..
+struct __attribute__((__packed__)) NardParamPacket {
+ NardPacket Hdr;
+ int16_t    params[4];
+};
+
+
 
 class Nard {
 public:
@@ -95,6 +107,8 @@ public:
   typedef bool    (*ExeCmd)   (const uint8_t); 
   typedef void    (*HashResp) (const bool);
   typedef void    (*ImgGet)   (void);
+  typedef bool    (*ParamGet)   (const uint8_t, int16_t*,int16_t*,int16_t*,int16_t*);
+  typedef bool    (*ParamSet)   (const uint8_t, const int16_t, const int16_t, const int16_t, const int16_t);  
   bool setPingInterval(uint16_t interval); 
   bool setReg(char *str, uint16_t id, uint16_t group, uint16_t process); 
   bool connected();
@@ -108,6 +122,7 @@ public:
   void onCommand(ExeCmd cmdExe);
   void onHashResp(HashResp respHash);
   void onImage(ImgGet getImg);
+  void onParams(ParamGet getParam, ParamSet setParam);
   void poll();
   //sets and logs a var..
   bool logVar(const uint8_t index, const uint8_t val);
@@ -130,6 +145,7 @@ public:
   //sets a new jpg to server
   bool setJpg(const uint8_t* buff, const int32_t size);
   bool checkCode(char *str);
+  bool setParams(const uint8_t index, const int16_t p1, const int16_t p2, const int16_t p3, const int16_t p4);
 private:
   WiFiClient _nard;
   char* _displayName;
@@ -161,6 +177,8 @@ private:
   FloatSet  _floatSet;
   FloatGet  _floatGet;
   ExeCmd  _exeCmd;
+  ParamGet _paramGet;
+  ParamSet _paramSet;
   HashResp _hashResp;
   ImgGet _imgGet;
   bool _checkIncoming();
@@ -181,6 +199,8 @@ private:
   bool _getFloat();
   bool _setFloat();
   bool _getImg();
+  bool _getParam();
+  bool _setParam();
   bool _onExec();
   void _processIncoming();  
   void _processACK();
