@@ -202,6 +202,9 @@ type
     procedure piRecvSet(aNardCtx: tNardCntx);
     procedure piRecvSetnLog(aNardCtx: tNardCntx);
     procedure piRecvHash(aNardCtx: tNardCntx);
+    procedure piRecvGetParams(aNardCtx: tNardCntx);
+    procedure piRecvSetParams(aNardCtx: tNardCntx);
+    procedure piRecvSetnLogParams(aNardCtx: tNardCntx);
 
   public
     Constructor Create;
@@ -728,6 +731,7 @@ var
   aDouble:double;
   aInt:Int32;
   aUInt:UInt32;
+  params:array[0..3] of Int16;
 begin
 
 
@@ -778,47 +782,69 @@ begin
       if (c<>tNardCntx(aContext.Data).fCommandID) then
        begin
         tNardCntx(aContext.Data).fHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
-        tNardCntx(aContext.Data).fHdr.Option[0] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
-        tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
-        tNardCntx(aContext.Data).fHdr.Option[2] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
-        tNardCntx(aContext.Data).fHdr.Option[3] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
-        tNardCntx(aContext.Data).fHdr.DataSize:=0;
-        SetLength(aBuff, SizeOf(tPacketHdr));
-        case tNardCntx(aContext.Data).fHdr.Option[1] of
-        SG_INT32:begin
-                 tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Int32);
-                 SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
-                 aInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
-                 move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
-                 end;
-        SG_UINT32:begin
-                 tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(UInt32);
-                 SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(UInt32));
-                 aUInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
-                 move(aUInt,aBuff[SizeOf(tPacketHdr)],SizeOf(UInt32));
-                 end;
-        SG_FLT4: begin
-                 tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Single);
-                 SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Single));
-                 aSingle := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
-                 move(aSingle,aBuff[SizeOf(tPacketHdr)],SizeOf(Single));
-                 end;
-        SG_FLT8: begin
-                 tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(double);
-                 SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(double));
-                 aDouble := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
-                 move(aDouble,aBuff[SizeOf(tPacketHdr)],SizeOf(Double));
-                 end;
+       if tNardCntx(aContext.Data).fHdr.Command<> CMD_PARAMS then
+        begin
+          tNardCntx(aContext.Data).fHdr.Option[0] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
+          tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
+          tNardCntx(aContext.Data).fHdr.Option[2] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
+          tNardCntx(aContext.Data).fHdr.Option[3] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
+          tNardCntx(aContext.Data).fHdr.DataSize:=0;
+          SetLength(aBuff, SizeOf(tPacketHdr));
+          case tNardCntx(aContext.Data).fHdr.Option[1] of
+          SG_INT32:begin
+                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Int32);
+                   SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
+                   aInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
+                   move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
+                   end;
+          SG_UINT32:begin
+                    tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(UInt32);
+                    SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(UInt32));
+                    aUInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
+                    move(aUInt,aBuff[SizeOf(tPacketHdr)],SizeOf(UInt32));
+                   end;
+          SG_FLT4: begin
+                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Single);
+                   SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Single));
+                   aSingle := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
+                   move(aSingle,aBuff[SizeOf(tPacketHdr)],SizeOf(Single));
+                   end;
+          SG_FLT8: begin
+                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(double);
+                   SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(double));
+                   aDouble := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
+                   move(aDouble,aBuff[SizeOf(tPacketHdr)],SizeOf(Double));
+                   end;
 
-        end;
+          end;
+        end else
+           begin
+           //index is stored in valueint
+           tNardCntx(aContext.Data).fHdr.Option[0] := PARAMS_SET;
+           tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
+           tNardCntx(aContext.Data).fHdr.Option[2] := 0;
+           tNardCntx(aContext.Data).fHdr.Option[3] := 0;
+           tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(params);
+           //params are in the ops
+           params[0]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
+           params[1]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
+           params[2]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
+           params[3]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
+           SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(params));
+           move(params,aBuff[SizeOf(tPacketHdr)],SizeOf(params));
+           end;
+          //move header in..
           Move(tNardCntx(aContext.Data).fHdr, aBuff[0], SizeOf(tPacketHdr));
+          //send it off..
           aContext.Connection.IOHandler.Write(aBuff);
           IncSent;
+          //remember..
           tNardCntx(aContext.Data).fCommandID:=c;
+          //release..
           SetLength(aBuff, 0);
 
 
-
+           //delete command..
            tNardCntx(aContext.Data).fQryGen.Active := false;
            tNardCntx(aContext.Data).fQryGen.SQL.Clear;
            tNardCntx(aContext.Data).fQryGen.SQL.Add('delete from ArdCommands a where a.CommandId = ' + IntToStr(c));
@@ -827,7 +853,18 @@ begin
            finally
              tNardCntx(aContext.Data).fQryGen.Active := false;
           end;
-       end;
+       end else
+           begin
+             //old command.. try to delete again..
+            tNardCntx(aContext.Data).fQryGen.Active := false;
+            tNardCntx(aContext.Data).fQryGen.SQL.Clear;
+            tNardCntx(aContext.Data).fQryGen.SQL.Add('delete from ArdCommands a where a.CommandId = ' + IntToStr(c));
+             try
+               tNardCntx(aContext.Data).fQryGen.ExecSQL;
+             finally
+               tNardCntx(aContext.Data).fQryGen.Active := false;
+             end;
+           end;
 
       end else
          begin  //probaby don't need this as i changed to tiReadCommited..
@@ -1341,7 +1378,8 @@ begin
                     // bad size
                     IncBad; SetLength(aPacketCxt.fBuff, 0);
                     SetLength(aBuff, 0);
-                    Log('Bad Data Buffer Size ' + aContext.Binding.PeerIP); end;
+                    Log('Bad Data Buffer Size ' + aContext.Binding.PeerIP);
+                   end;
                 end else
                  begin
                   // recv the packet.. just a header..
@@ -1383,13 +1421,21 @@ begin
       //  Log('Processing Packet Command:' + IntToStr(aPacketCtx.fHdr.Command) +
        //   ' from ip:' + aPacketCtx.Context.Binding.PeerIP);
 
+
         case aPacketCtx.fHdr.Command of
          CMD_NOP: piRecvNOP(aPacketCtx);
          CMD_REG: piRecvReg(aPacketCtx);
          CMD_SET: piRecvSet(aPacketCtx);
          CMD_GET: piRecvGet(aPacketCtx);
          CMD_SETNLOG: piRecvSetnLog(aPacketCtx);
-         CMD_HASH:;
+         CMD_HASH: piRecvHash(aPacketCtx);
+         CMD_PARAMS: begin
+                       case aPacketCtx.fHdr.Option[0] of
+                       PARAMS_GET: piRecvGetParams(aPacketCtx);
+                       PARAMS_SET: piRecvSetParams(aPacketCtx);
+                       PARAMS_SETNLOG: piRecvSetnLogParams(aPacketCtx);
+                       end;
+                     end;
         end;
 
 end;
@@ -1937,6 +1983,7 @@ SetFailed: boolean;
         //saving a jpeg??
          if (aNardCtx.fHdr.Option[1] = SG_JPG) AND (aNardCtx.fHdr.DataSize>0) then
           begin
+           //  Log('Saving Jpeg size:'+IntToStr(aNardCtx.fHdr.DataSize));
             aStrm:=tMemoryStream.Create;
             aStrm.SetSize( aNardCtx.fHdr.DataSize);
             aStrm.Write(aNardCtx.fBuff, aNardCtx.fHdr.DataSize);
@@ -1947,7 +1994,8 @@ SetFailed: boolean;
             aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ', :IMG );');
             aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
             aStrm.Destroy;
-           try aNardCtx.fQryGen.ExecSQL;
+           try
+             aNardCtx.fQryGen.ExecSQL;
               except on e: Exception do
               begin
                LogError('NardCtx:SetValue:ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
@@ -2346,6 +2394,294 @@ aStrm:tMemoryStream;
 
 
  end;
+
+
+procedure tNardServer.piRecvGetParams(aNardCtx: tNardCntx);
+var
+params:array[0..3] of Int16;
+aBuff: TIdBytes;
+failed: boolean;
+
+ begin
+ // get a value
+ if not aNardCtx.fRegged then exit; // outta here..
+ failed := false;
+
+   aNardCtx.fQryGen.Active := false;
+   aNardCtx.fQryGen.SQL.Clear;
+   aNardCtx.fQryGen.SQL.Add('Select * from ARDPARAMS');
+   aNardCtx.fQryGen.SQL.Add('Where ArdID=' + IntToStr(aNardCtx.fNardID) +' AND ParamIndex=' + IntToStr(aNardCtx.fHdr.Option[1]));
+     try
+      aNardCtx.fQryGen.Active := true;
+      except on e: Exception do
+        begin
+         LogError('NardCtx:GetValue:SQL Error: '+ e.Message + ' from ip:' + aNardCtx.Context.Binding.PeerIP);
+         failed := true;
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+         exit;
+        end;
+     end;
+
+       if aNardCtx.fQryGen.RecordCount = 0 then
+         begin
+         aNardCtx.fQryGen.Active:=false;
+         LogError('NardCtx:GetValue:Error:No Records for index  from ip:' + aNardCtx.Context.Binding.PeerIP);
+         failed := true;
+         end;
+
+
+
+       if failed then
+         begin
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+         exit;
+         end;
+
+
+     if not failed then
+      begin
+        // send data back
+        aNardCtx.fHdr.Option[2]:=0;
+        aNardCtx.fHdr.Option[3]:=0;
+        // size the outgoing buff..
+        SetLength(aBuff, SizeOf(tPacketHdr));
+        // send a set command back
+        aNardCtx.fHdr.Command := CMD_PARAMS;
+        aNardCtx.fHdr.Option[0]:=PARAMS_SET;
+        aNardCtx.fHdr.DataSize := SizeOf(params);
+        params[0]:=aNardCtx.fQryGen.FieldByName('P1').AsInteger;
+        params[1]:=aNardCtx.fQryGen.FieldByName('P2').AsInteger;
+        params[2]:=aNardCtx.fQryGen.FieldByName('P3').AsInteger;
+        params[3]:=aNardCtx.fQryGen.FieldByName('P4').AsInteger;
+        aNardCtx.fQryGen.Active := false;
+        SetLength(aBuff,SizeOf(tPacketHdr)+SizeOf(params));
+        Move(params,aBuff[SizeOf(tPacketHdr)],SizeOf(params));
+        //move header in
+        Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+        //send it off..
+        aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+        SetLength(aBuff, 0);
+        IncSent;
+      end;
+
+
+ end;
+
+procedure tNardServer.piRecvSetParams(aNardCtx: tNardCntx);
+var
+params:array[0..3] of Int16;
+aBuff: TIdBytes;
+SetFailed: boolean;
+ begin
+ // set a value
+ if not aNardCtx.fRegged then exit; // outta here..
+ SetFailed := false;
+ //check buff size..
+ if Length(aNardCtx.fBuff) = sizeOf(params) then
+    move(aNardCtx.fBuff[0],params,SizeOf(params)) else SetFailed := true;
+
+ if not SetFailed then
+   begin
+       aNardCtx.fQryGen.Active := false;
+       aNardCtx.fQryGen.SQL.Clear;
+         aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDPARAMS (ARDID, PARAMINDEX, PARAM1, PARAM2, PARAM3, PARAM4)');
+         aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1]) + ',' + IntToStr(params[0]) +
+         ',' + IntToStr(params[1]) +',' + IntToStr(params[2]) +',' + IntToStr(params[3]) + ')');
+        aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, PARAMINDEX)');
+         try aNardCtx.fQryGen.ExecSQL;
+           except on e: Exception do
+            begin
+             LogError('NardCtx:SetValue:ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+             IncSent;
+            end;
+
+         end;
+   end;
+
+      if not SetFailed then
+       begin
+        // send an ack
+        SetLength(aBuff, SizeOf(tPacketHdr));
+        aNardCtx.fHdr.Command := CMD_ACK;
+        aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+        aNardCtx.fHdr.Option[1] := 0;
+        aNardCtx.fHdr.Option[2] := 0;
+        aNardCtx.fHdr.Option[3] := 0;
+        aNardCtx.fHdr.DataSize := 0;
+        Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+        aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+        SetLength(aBuff, 0);
+        IncSent;
+        TrigSetVar;
+        end else
+            begin
+             LogError('NardCtx:SetValue:Sizing Error:Buff size:'+IntToStr(Length(aNardCtx.fBuff))+'<> Param size:'+ IntToStr(sizeOf(params))+'  from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+            IncSent;
+            end;
+ end;
+
+
+procedure tNardServer.piRecvSetnLogParams(aNardCtx: tNardCntx);
+var
+params:array[0..3] of Int16;
+aBuff: TIdBytes;
+SetFailed: boolean;
+aStrm:tMemoryStream;
+ begin
+ // set a value
+ if not aNardCtx.fRegged then exit; // outta here..
+ SetFailed := false;
+ //check buff size..
+ if Length(aNardCtx.fBuff) = sizeOf(params) then
+    move(aNardCtx.fBuff[0],params,SizeOf(params)) else SetFailed := true;
+
+ if not SetFailed then
+   begin
+       aNardCtx.fQryGen.Active := false;
+       aNardCtx.fQryGen.SQL.Clear;
+         aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDPARAMS (ARDID, PARAMINDEX, PARAM1, PARAM2, PARAM3, PARAM4)');
+         aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1]) + ',' + IntToStr(params[0]) +
+         ',' + IntToStr(params[1]) +',' + IntToStr(params[2]) +',' + IntToStr(params[3]) + ')');
+        aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, PARAMINDEX)');
+         try aNardCtx.fQryGen.ExecSQL;
+           except on e: Exception do
+            begin
+             LogError('NardCtx:SetValue:ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+             IncSent;
+            end;
+
+         end;
+   end;
+
+    if not SetFailed then
+     begin
+       //now log it..
+        aNardCtx.fQryGen.Active := false;
+        aNardCtx.fQryGen.SQL.Clear;
+        aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGPARAMS (STAMP, ARDID, PARAMINDEX, PARAM1, PARAM2, PARAM3, PARAM4 )');
+         aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1]) + ',' + IntToStr(params[0]) +
+         ',' + IntToStr(params[1]) +',' + IntToStr(params[2]) +',' + IntToStr(params[3]) + ')');
+
+         try aNardCtx.fQryGen.ExecSQL;
+           except on e: Exception do
+            begin
+             LogError('NardCtx:LogValue:ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+             SetFailed := true;
+            // send a nak
+            SetLength(aBuff, SizeOf(tPacketHdr));
+            aNardCtx.fHdr.Command := CMD_NAK;
+            aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+            aNardCtx.fHdr.Option[1] := 0;
+            aNardCtx.fHdr.Option[2] := 0;
+            aNardCtx.fHdr.Option[3] := 0;
+            aNardCtx.fHdr.DataSize := 0;
+            Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+            aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+            SetLength(aBuff, 0);
+            IncSent;
+            exit;
+            end;
+
+         end;
+     end;
+
+
+
+
+
+
+      if not SetFailed then
+       begin
+        // send an ack
+        SetLength(aBuff, SizeOf(tPacketHdr));
+        aNardCtx.fHdr.Command := CMD_ACK;
+        aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+        aNardCtx.fHdr.Option[1] := 0;
+        aNardCtx.fHdr.Option[2] := 0;
+        aNardCtx.fHdr.Option[3] := 0;
+        aNardCtx.fHdr.DataSize := 0;
+        Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+        aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+        SetLength(aBuff, 0);
+        IncSent;
+        TrigSetVar;
+        end else
+            begin
+             LogError('NardCtx:SetValue:Sizing Error:  from ip:' +aNardCtx.Context.Binding.PeerIP);
+              SetFailed := true;
+             // send a nak
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_PARAMS;
+             aNardCtx.fHdr.Option[1] := 0;
+             aNardCtx.fHdr.Option[2] := 0;
+             aNardCtx.fHdr.Option[3] := 0;
+             aNardCtx.fHdr.DataSize := 0;
+             Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
+            IncSent;
+            end;
+ end;
+
 
 
 

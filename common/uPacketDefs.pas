@@ -19,6 +19,7 @@ const
 Ident_Packet :array[0..1] of byte = (126, 113);
 //max items in the q before we start dropping
 MAX_QUES=101;
+MAX_PARAMS=4;
 
 //Command bytes
 CMD_NOP=0;//no opertation
@@ -30,6 +31,8 @@ CMD_GET=4;//get
 CMD_EXE=5;//execute
 CMD_SETNLOG=6;//sets and logs a var
 CMD_HASH=7;//check a hash
+CMD_PARAMS=8;//set or get int16 * MAX_PARAMS
+CMD_OTA=99;//firmware update
 
 
 //set and get value types..
@@ -48,6 +51,11 @@ SG_JPG    = 8;
 HASH_CHECK = 0;
 HASH_PASS  = 1;
 HASH_FAIL  = 2;
+
+//Param option 0
+PARAMS_GET = 0;
+PARAMS_SET = 1;
+PARAMS_SETNLOG = 2;
 
 
 
@@ -105,6 +113,12 @@ type
     tDoublePacket = packed record
        header :tPacketHdr;
        value  :double;//8 byte float
+    end;
+
+ type
+    tParamPacket = packed record
+         header:tPacketHdr;
+         params:array[0..3] of Int16;//4 16 bit ints
     end;
 
 
