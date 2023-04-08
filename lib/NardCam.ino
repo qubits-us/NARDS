@@ -24,8 +24,8 @@
 camera_config_t config;
 
 
-const char *ssid = "Jelly";
-const char *password = "2019jammified";
+const char *ssid = "****";
+const char *password = "*******";
 
 char *host = "192.168.0.51";  // IP of nards server
 int port = 12000;             // server port
@@ -36,9 +36,9 @@ Nard nard;
 
 
 //how many command
-const byte NumCommands = 7;
+const byte NumCommands = 8;
 //the commands to watch for
-const char* Commands[] = {"SET", "GET", "TEMP", "STAT", "CONN", "RECON", "IMG"};
+const char* Commands[] = {"SET", "GET", "TEMP", "STAT", "CONN", "RECON", "IMG", "PARAMS"};
 //buffer to store incomming
 char buff[80];
 //new value sent in XXX=100
@@ -67,6 +67,8 @@ bool OnGetInt(const uint8_t index, int16_t* value);
 bool OnSetInt(const uint8_t index,const int16_t value);
 bool OnGeFloat(const uint8_t index, float* value);
 bool OnSetFloat(const uint8_t index,const float value);
+bool OnSetParams(const uint8_t index,const  int16_t p1,const  int16_t p2,const  int16_t p3,const  int16_t p4);
+bool OnGetParams(const uint8_t index, int16_t* p1, int16_t* p2, int16_t* p3, int16_t* p4);
 bool OnExeCommand(const uint8_t index);
 
 
@@ -99,6 +101,7 @@ void setup(void) {
   nard.onWords(OnGetWord, OnSetWord);
   nard.onInts(OnGetInt, OnSetInt);
   nard.onFloats(OnGetFloat, OnSetFloat);
+  nard.onParams(OnGetParams, OnSetParams);
   nard.onCommand(OnExeCommand);
   nard.onImage(OnJpg);
   nard.setReg("Nard X", 1, 0, 0);
@@ -107,7 +110,7 @@ void setup(void) {
     Serial.println("Nard connected..");
   }
   
-  Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG");
+  Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG PARAMS");
 }
 
 
@@ -174,6 +177,8 @@ void CheckForCommand(){
    //use a switch statement for many commands..
   if (CommandRecv) {
     int cmd = ParseCommand(buff);
+    Serial.print("Command: ");
+    Serial.println(cmd);
      switch (cmd){
          case 0:CmdSet(); break;
          case 1:CmdGet(); break;
@@ -182,8 +187,9 @@ void CheckForCommand(){
          case 4:CmdConn(); break;
          case 5:CmdReConn(); break;
          case 6:SendJpg(); break;
+         case 7:CmdParams(); break;
      }    
-     Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG");
+     Serial.println("Commands: SET GET TEMP STAT CONN RECON IMG PARAMS");
     CommandRecv = false;
     CharCounter = 0;
     ZeroBuffer();
@@ -239,6 +245,13 @@ void CmdTemp(){
   temp = temp - NewValue;
   
 }
+
+void CmdParams()
+{
+  nard.setParams(1,101,201,301,401);
+  
+}
+
 //splits incoming string
 //into command and value
 //returns the commands array position if found
@@ -419,6 +432,7 @@ bool OnGetFloat(const uint8_t index, float* value) {
   return result;
 }
 
+
 bool OnSetFloat(const uint8_t index,const  float value) {
   bool result = false;
   switch (index) {
@@ -430,14 +444,50 @@ bool OnSetFloat(const uint8_t index,const  float value) {
   }
 }
 
+
+
+bool OnSetParams(const uint8_t index,const  int16_t p1,const  int16_t p2,const  int16_t p3,const  int16_t p4) {
+  bool result = false;
+  switch (index) {
+    case 0: Serial.println("SetParams 0"); result = true; break;
+    case 1: Serial.println("SetParams 1"); result = true; break;
+    case 2: Serial.println("SetParams 2"); result = true; break;
+    case 3: Serial.println("SetParams 3"); result = true; break;
+    case 4: Serial.println("SetParams 4"); result = true; break;
+  }
+}
+
+bool OnGetParams(const uint8_t index, int16_t* p1, int16_t* p2, int16_t* p3, int16_t* p4) {
+  bool result = false;
+  //some fake vals
+  *p1=101;
+  *p2=201;
+  *p3=301;
+  *p4=401;
+  switch (index) {
+    case 0: Serial.println("GetParams 0"); result = true; break;
+    case 1: Serial.println("GetParams 1"); result = true; break;
+    case 2: Serial.println("GetParams 2"); result = true; break;
+    case 3: Serial.println("GetParams 3"); result = true; break;
+    case 4: Serial.println("GetParams 4"); result = true; break;
+  }
+}
+
+
+
+
 void SendJpg() {      
+  
+Serial.println("sending JPG..");  
 camera_fb_t * fb = NULL;
   fb = esp_camera_fb_get();  
   if(!fb) {
     Serial.println("Camera capture failed");
     return;
   }
-  nard.logJpg(fb->buf, fb->len);
+  if (!nard.logJpg(fb->buf, fb->len)){
+    Serial.println("failed to send jpg!");
+  }
   esp_camera_fb_return(fb); 
 }
 
