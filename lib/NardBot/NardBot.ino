@@ -48,7 +48,7 @@ int port = 12000;             // server port
 
 //cam server vars
 unsigned long lastCap = 0;
-integer capDelay = 100;
+int capDelay = 100;
 
 
 WiFiServer server_Camera(12001);
@@ -220,7 +220,7 @@ void loopTask_Camera(void *pvParameters) {
         while (client.connected()) {//loop while the client's connected
           if (videoFlag == 1) {
            if (millis()-lastCap>=capDelay){ 
-             lastCap:=millis();
+             lastCap=millis();
             fb = esp_camera_fb_get();
             if (fb != NULL) {
               uint8_t slen[4];
