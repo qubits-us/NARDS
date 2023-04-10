@@ -17,7 +17,7 @@ type
     btnEdit: TButton;
     btnDelete: TButton;
     btnSetV: TButton;
-    PageControl1: TPageControl;
+    pcMain: TPageControl;
     tsGen: TTabSheet;
     tsImg: TTabSheet;
     tsAct: TTabSheet;
@@ -46,16 +46,10 @@ type
     edOfflineImg: TEdit;
     lblOffline: TLabel;
     cmbAction: TComboBox;
-    EdMin: TEdit;
-    edMax: TEdit;
-    lblMax: TLabel;
-    lblValMin: TLabel;
-    lblStepBy: TLabel;
-    edStep: TEdit;
     cmbActionValType: TComboBox;
-    cmbValType: TLabel;
+    lblType: TLabel;
     edValID: TEdit;
-    Label1: TLabel;
+    lblIndex: TLabel;
     lblAction: TLabel;
     GroupBox1: TGroupBox;
     edVLeft: TEdit;
@@ -64,6 +58,25 @@ type
     lblNameLeft: TLabel;
     edVtop: TEdit;
     lblNameTop: TLabel;
+    pcActions: TPageControl;
+    tsActionMain: TTabSheet;
+    EdMin: TEdit;
+    edMax: TEdit;
+    lblMax: TLabel;
+    lblValMin: TLabel;
+    edStep: TEdit;
+    edParam2: TEdit;
+    lblParam2: TLabel;
+    lblStepBy: TLabel;
+    tsActionUp: TTabSheet;
+    edParam1Up: TEdit;
+    edParam2Up: TEdit;
+    edParam3Up: TEdit;
+    edParam4Up: TEdit;
+    lblParam1Up: TLabel;
+    lblParam2Ip: TLabel;
+    lblParam3Up: TLabel;
+    lblParam4Up: TLabel;
     procedure beOnlineImgLeftButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnSelectNClick(Sender: TObject);
@@ -284,8 +297,14 @@ if ItemID = 0 then
  dmDb.qryGen.SQL.Add('update ScreenItems a set a.ArdID='+edNardID.Text+', a.DISPLAYNAME='''+edName.Text+''',');
  dmDb.qryGen.SQL.Add('a.ShowName='+BoolToStr(cbShowName.Checked,true)+' ,a.PosLeft='+edLeft.Text+', a.PosTop='+edTop.Text+',');
  dmDb.qryGen.SQL.Add('a.Width='+edWidth.Text+' ,a.Height='+edHeight.Text+',a.DNLeft='+edVLeft.Text+' ,a.DNTop='+edVTop.Text+', a.DNSize='+edVSize.Text+',');
+ if cmbAction.ItemIndex>5 then
+ dmDb.qryGen.SQL.Add('a.ActionID='+IntToStr(cmbAction.ItemIndex)+' ,a.ActionVal='+edValId.Text+',a.ActionValType='+
+    edParam2.Text+' ,a.ActionValMin='+edMin.Text+', a.ActionValMax='+edMax.Text+', a.ActionValStep='+edStep.Text+',')
+    else
  dmDb.qryGen.SQL.Add('a.ActionID='+IntToStr(cmbAction.ItemIndex)+' ,a.ActionVal='+edValId.Text+',a.ActionValType='+
     IntToStr(cmbActionValType.ItemIndex)+' ,a.ActionValMin='+edMin.Text+', a.ActionValMax='+edMax.Text+', a.ActionValStep='+edStep.Text+',');
+
+ dmDb.qryGen.SQL.Add('a.ParamUp1='+edParam1Up.Text+' ,a.ParamUp2='+edParam2Up.Text+',a.ParamUp3='+edParam3Up.Text+' ,a.ParamUp4='+edParam4Up.Text+',');
  dmDb.qryGen.SQL.Add('a.OnlineImg='''+edNormalImg.Text+''',a.OfflineImg='''+edOfflineImg.Text+
                       ''', a.AlertImg= '''+edAlertImg.Text+''' ,a.OnImg= '''+edOnImg.Text+'''');
  dmDb.qryGen.SQL.Add('where a.Screenid= '+IntToStr(ScreenID)+' AND a.ItemId= '+IntToStr(ItemId));
@@ -323,6 +342,32 @@ end;
 procedure TNardLayoutFrm.cmbActionChange(Sender: TObject);
 begin
 //changing..
+if cmbAction.ItemIndex>5 then
+  begin
+  lblStepBy.Caption:='Param 1';
+  lblValMin.Caption:='Param 3';
+  lblMax.Caption:='Param 4';
+  lblIndex.Caption:='Param Id';
+  edParam2.Visible:=true;
+  lblParam2.Visible:=true;
+  cmbActionValType.Visible:=false;
+  lblType.Visible:=false;
+  tsActionUp.TabVisible:=true;
+  tsActionMain.Caption:='Down';
+  end else
+     begin
+     lblStepBy.Caption:='Step';
+     lblValMin.Caption:='Min';
+     lblMax.Caption:='Max';
+     lblIndex.Caption:='Val Id';
+     edParam2.Visible:=false;
+     lblParam2.Visible:=false;
+     cmbActionValType.Visible:=true;
+     lblType.Visible:=true;
+     pcActions.TabIndex:=0;
+     tsActionUp.TabVisible:=false;
+     tsActionMain.Caption:='Val';
+     end;
 
 end;
 

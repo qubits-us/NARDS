@@ -4,7 +4,7 @@ object NardLayoutFrm: TNardLayoutFrm
   BorderIcons = [biMinimize, biMaximize]
   BorderStyle = bsToolWindow
   Caption = 'Nard Item...'
-  ClientHeight = 326
+  ClientHeight = 334
   ClientWidth = 655
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,11 +18,11 @@ object NardLayoutFrm: TNardLayoutFrm
   OnCreate = FormCreate
   DesignSize = (
     655
-    326)
+    334)
   TextHeight = 15
   object lblItemID: TLabel
     Left = 440
-    Top = 304
+    Top = 312
     Width = 70
     Height = 15
     Alignment = taRightJustify
@@ -34,14 +34,14 @@ object NardLayoutFrm: TNardLayoutFrm
   end
   object btnUpdate: TButton
     Left = 566
-    Top = 296
+    Top = 304
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Save'
     TabOrder = 0
     OnClick = btnUpdateClick
-    ExplicitTop = 342
+    ExplicitTop = 296
   end
   object DBGrid1: TDBGrid
     Left = 306
@@ -137,21 +137,21 @@ object NardLayoutFrm: TNardLayoutFrm
   end
   object btnSetV: TButton
     Left = 306
-    Top = 296
+    Top = 304
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Show'
     TabOrder = 5
     OnClick = btnSetVClick
-    ExplicitTop = 342
+    ExplicitTop = 296
   end
-  object PageControl1: TPageControl
+  object pcMain: TPageControl
     Left = 8
-    Top = 3
-    Width = 292
-    Height = 286
-    ActivePage = tsGen
+    Top = 8
+    Width = 281
+    Height = 310
+    ActivePage = tsAct
     TabOrder = 6
     object tsGen: TTabSheet
       Caption = 'Main'
@@ -405,35 +405,14 @@ object NardLayoutFrm: TNardLayoutFrm
     object tsAct: TTabSheet
       Caption = 'Action'
       ImageIndex = 2
-      object lblMax: TLabel
-        Left = 112
-        Top = 157
-        Width = 23
-        Height = 15
-        Caption = 'Max'
-      end
-      object lblValMin: TLabel
-        Left = 8
-        Top = 157
-        Width = 21
-        Height = 15
-        Caption = 'Min'
-      end
-      object lblStepBy: TLabel
-        Left = 8
-        Top = 112
-        Width = 23
-        Height = 15
-        Caption = 'Step'
-      end
-      object cmbValType: TLabel
+      object lblType: TLabel
         Left = 104
         Top = 63
         Width = 55
         Height = 15
         Caption = 'Value Type'
       end
-      object Label1: TLabel
+      object lblIndex: TLabel
         Left = 8
         Top = 63
         Width = 41
@@ -461,31 +440,9 @@ object NardLayoutFrm: TNardLayoutFrm
           'Execute Command'
           'Toggle Value'
           'Adjust Value'
-          'Show Nard Images')
-      end
-      object EdMin: TEdit
-        Left = 8
-        Top = 178
-        Width = 82
-        Height = 23
-        TabOrder = 1
-        Text = '0'
-      end
-      object edMax: TEdit
-        Left = 112
-        Top = 178
-        Width = 82
-        Height = 23
-        TabOrder = 2
-        Text = '1'
-      end
-      object edStep: TEdit
-        Left = 8
-        Top = 128
-        Width = 67
-        Height = 23
-        TabOrder = 3
-        Text = '1'
+          'Show Nard Images'
+          'Set Parameters'
+          'Drive Parameters')
       end
       object cmbActionValType: TComboBox
         Left = 104
@@ -494,7 +451,7 @@ object NardLayoutFrm: TNardLayoutFrm
         Height = 23
         Style = csDropDownList
         ItemIndex = 0
-        TabOrder = 4
+        TabOrder = 1
         Text = 'Byte'
         Items.Strings = (
           'Byte'
@@ -510,8 +467,146 @@ object NardLayoutFrm: TNardLayoutFrm
         Top = 80
         Width = 65
         Height = 23
-        TabOrder = 5
+        TabOrder = 2
         Text = '0'
+      end
+      object pcActions: TPageControl
+        Left = 8
+        Top = 109
+        Width = 229
+        Height = 148
+        ActivePage = tsActionMain
+        TabOrder = 3
+        object tsActionMain: TTabSheet
+          Caption = 'Set'
+          object lblMax: TLabel
+            Left = 112
+            Top = 58
+            Width = 23
+            Height = 15
+            Caption = 'Max'
+          end
+          object lblValMin: TLabel
+            Left = 16
+            Top = 58
+            Width = 21
+            Height = 15
+            Caption = 'Min'
+          end
+          object lblParam2: TLabel
+            Left = 112
+            Top = 8
+            Width = 43
+            Height = 15
+            Caption = 'Param 2'
+            Visible = False
+          end
+          object lblStepBy: TLabel
+            Left = 16
+            Top = 8
+            Width = 23
+            Height = 15
+            Caption = 'Step'
+          end
+          object EdMin: TEdit
+            Left = 16
+            Top = 74
+            Width = 82
+            Height = 23
+            TabOrder = 0
+            Text = '0'
+          end
+          object edMax: TEdit
+            Left = 112
+            Top = 74
+            Width = 82
+            Height = 23
+            TabOrder = 1
+            Text = '1'
+          end
+          object edStep: TEdit
+            Left = 16
+            Top = 24
+            Width = 82
+            Height = 23
+            TabOrder = 2
+            Text = '1'
+          end
+          object edParam2: TEdit
+            Left = 112
+            Top = 24
+            Width = 82
+            Height = 23
+            TabOrder = 3
+            Text = '0'
+            Visible = False
+          end
+        end
+        object tsActionUp: TTabSheet
+          Caption = 'Up'
+          ImageIndex = 1
+          TabVisible = False
+          object lblParam1Up: TLabel
+            Left = 16
+            Top = 8
+            Width = 43
+            Height = 15
+            Caption = 'Param 1'
+          end
+          object lblParam2Ip: TLabel
+            Left = 112
+            Top = 8
+            Width = 43
+            Height = 15
+            Caption = 'Param 2'
+          end
+          object lblParam3Up: TLabel
+            Left = 16
+            Top = 58
+            Width = 43
+            Height = 15
+            Caption = 'Param 3'
+          end
+          object lblParam4Up: TLabel
+            Left = 112
+            Top = 58
+            Width = 43
+            Height = 15
+            Caption = 'Param 4'
+          end
+          object edParam1Up: TEdit
+            Left = 16
+            Top = 24
+            Width = 82
+            Height = 23
+            TabOrder = 0
+            Text = '0'
+          end
+          object edParam2Up: TEdit
+            Left = 112
+            Top = 24
+            Width = 82
+            Height = 23
+            TabOrder = 1
+            Text = '0'
+          end
+          object edParam3Up: TEdit
+            Left = 16
+            Top = 74
+            Width = 82
+            Height = 23
+            TabOrder = 2
+            Text = '0'
+          end
+          object edParam4Up: TEdit
+            Left = 112
+            Top = 74
+            Width = 82
+            Height = 23
+            TabOrder = 3
+            Text = '0'
+          end
+        end
       end
     end
   end

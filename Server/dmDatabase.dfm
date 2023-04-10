@@ -611,6 +611,18 @@ object dmDB: TdmDB
     object qryScreenItemsACTIONVALSTEP: TZIntegerField
       FieldName = 'ACTIONVALSTEP'
     end
+    object qryScreenItemsPARAMUP1: TZIntegerField
+      FieldName = 'PARAMUP1'
+    end
+    object qryScreenItemsPARAMUP2: TZIntegerField
+      FieldName = 'PARAMUP2'
+    end
+    object qryScreenItemsPARAMUP3: TZIntegerField
+      FieldName = 'PARAMUP3'
+    end
+    object qryScreenItemsPARAMUP4: TZIntegerField
+      FieldName = 'PARAMUP4'
+    end
   end
   object seqScreens: TZSequence
     Connection = dbConn
@@ -924,5 +936,36 @@ object dmDB: TdmDB
     Params = <>
     Left = 328
     Top = 248
+  end
+  object qryNardParams: TZQuery
+    Connection = dbConn
+    SQL.Strings = (
+      'select * from ArdParams')
+    Params = <>
+    Left = 400
+    Top = 112
+    object qryNardParamsARDID: TZIntegerField
+      FieldName = 'ARDID'
+      Required = True
+    end
+    object qryNardParamsPARAMINDEX: TZIntegerField
+      FieldName = 'PARAMINDEX'
+      Required = True
+    end
+    object qryNardParamsDISPLAYNAME: TZUnicodeStringField
+      FieldName = 'DISPLAYNAME'
+    end
+    object qryNardParamsPARAM1: TZIntegerField
+      FieldName = 'PARAM1'
+    end
+    object qryNardParamsPARAM2: TZIntegerField
+      FieldName = 'PARAM2'
+    end
+    object qryNardParamsPARAM3: TZIntegerField
+      FieldName = 'PARAM3'
+    end
+    object qryNardParamsPARAM4: TZIntegerField
+      FieldName = 'PARAM4'
+    end
   end
 end

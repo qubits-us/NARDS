@@ -15,10 +15,12 @@ uses
 
 
 type
+   TParamSet = array[0..3] of integer;
   // what type of test mode..
   TModeTest = (mtNone, mtRecord, mtLoop);
   // shared click event for all encapsulated components..
   TNardViewClickEvent = procedure(Sender: TObject) of Object;
+  TNardViewMouseEvent = procedure (Sender: TObject ; Button: TMouseButton; Shift: TShiftState; X, Y: Integer) of Object;
 
   // the component..
   TNardView = class(TCustomPanel)
@@ -36,6 +38,10 @@ type
 
     FNardImage: TImage;
     FIndicatorImage: TImage;
+    fParamsDown:TParamSet;
+    fParamsUp:TParamSet;
+    fParamIndex:integer;
+    fNoClick:Boolean;
 
     fIsNardOn: Boolean;
     FWorkInProgress: Boolean;
@@ -45,6 +51,8 @@ type
     FTimeSequence: Boolean;
     FItemId: integer;
     FOnClicked: TNardViewClickEvent;
+    FOnDown:TNardViewMouseEvent;
+    FOnUp:tNardViewMouseEvent;
 
     FNardPicture: TPicture;
     FIndicatorPicture: TPicture;
@@ -62,6 +70,8 @@ type
     procedure ThePictChanged(Sender: TObject);
     Function CreateLbls(S: String): TLabel;
     Procedure DoClick(Sender: TObject);
+    Procedure DoDown(Sender:TObject ; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    Procedure DoUp(Sender:TObject ; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SetIndicatorImage(Value: TPicture);
     procedure SetNardImage(Value: TPicture);
     procedure SetIsCommBusy(Value: integer);
@@ -93,9 +103,12 @@ type
     constructor Create(AOwner: TComponent; aWidth:integer; aHeight:integer); reintroduce;
     // override the destroy and clean up things..
     destructor Destroy; override;
+    property DownParams:TParamSet read fParamsDown write fParamsDown;
+    property UpParams:TParamSet read fParamsUp write fParamsUp;
+
   published
     { Published declarations }
-
+    Property NoClick:boolean read fNoClick write fNoClick;
     Property Selected: Boolean read fSelected write SetSelected;
     Property Locked: Boolean Read FRepairLock Write SetRepairLock Default False;
     property ShowDV1: Boolean read FShowDV1 write SetShowDV1;
@@ -120,7 +133,7 @@ type
     property DragKind;
     property DragMode;
     property OnEndDock;
-
+    Property ParamIndex:integer read fParamIndex write fParamIndex;
     Property GroupNumber: integer Read FGroupNumber Write SetGroupNumber default 0;
     Property ProcessNumber: integer Read FProcessNumber Write SetProcessNumber Default 0;
     property OnLine: Boolean Read FNardOnline write SetOnline default False;
@@ -130,6 +143,8 @@ type
     Property Slow: Boolean Read FNardIsSlow Write SetNardIsSlow Default False;
     Property NardNumber: integer Read GetNardNumber write SetNardNumber;
     Property OnClicked: TNardViewClickEvent Read FOnClicked write FOnClicked;
+    Property OnDown:TNardViewMouseEvent read fOnDown write fOnDown;
+    Property OnUp:TNardViewMouseEvent read fOnUp write fOnUp;
     property IndicatorImage: TPicture Read FIndicatorPicture Write SetIndicatorImage;
     Property NardImage: TPicture Read FNardPicture write SetNardImage;
     Property NardName: String Read GetNardName write SetNardName;
@@ -150,8 +165,19 @@ implementation
 
 
 constructor TNardView.Create(AOwner: TComponent; aWidth:integer; aHeight:integer);
+var
+i:integer;
 begin
   inherited Create(AOwner);
+   //init params
+   for I := 0 to 3 do
+     begin
+       fParamsUp[i]:=0;
+       fParamsDown[i]:=0;
+     end;
+
+  fNoClick:=false;
+  fParamIndex:=0;
 
   ParentColor := False;
   ParentBackground := False;
@@ -174,6 +200,8 @@ begin
   FNardImage.SetBounds(1, 1, Width, Height);
   FNardImage.Stretch := true;
   FNardImage.OnClick := DoClick;
+  FNardImage.OnMouseDown := DoDown;
+  FNardImage.OnMouseUp := DoUp;
   FNardImage.Transparent := False;
   FNardPicture := TPicture.Create;
   // assign the change event..
@@ -425,6 +453,18 @@ procedure TNardView.DoClick(Sender: TObject);
 begin
   if Assigned(FOnClicked) then
     FOnClicked(Self);
+end;
+
+procedure TNardView.DoDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
+begin
+  if Assigned(fOnDown) then
+     fOnDown(Self,Button,Shift,x,y);
+end;
+
+procedure TNardView.DoUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
+begin
+  if Assigned(fOnUp) then
+    fOnUp(Self,Button,Shift,x,y);
 end;
 
 procedure TNardView.SetModeTestType(Value: TModeTest);

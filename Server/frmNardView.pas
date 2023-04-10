@@ -21,7 +21,7 @@ type
     btnGet: TButton;
     dsValues: TDataSource;
     cmbType: TComboBox;
-    Label1: TLabel;
+    lblType: TLabel;
     dsImg: TDataSource;
     pgMain: TPageControl;
     tsValues: TTabSheet;
@@ -32,6 +32,20 @@ type
     DBImage1: TDBImage;
     DBNavigator1: TDBNavigator;
     DBText1: TDBText;
+    tsParams: TTabSheet;
+    dsParams: TDataSource;
+    DBGrid1: TDBGrid;
+    DBNavigator2: TDBNavigator;
+    edP1: TEdit;
+    edP2: TEdit;
+    edP3: TEdit;
+    edP4: TEdit;
+    btnSetParams: TButton;
+    lblP1: TLabel;
+    lblP2: TLabel;
+    lblP3: TLabel;
+    lblP4: TLabel;
+    btnGetImage: TButton;
     procedure btnCloseClick(Sender: TObject);
     procedure btnExecClick(Sender: TObject);
     procedure btnGetClick(Sender: TObject);
@@ -39,6 +53,8 @@ type
     procedure btnRefreshClick(Sender: TObject);
     procedure btnNameClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure btnSetParamsClick(Sender: TObject);
+    procedure btnGetImageClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -111,6 +127,39 @@ begin
    //causes clients to refresh dbs..
    PacketSrv.CommandID:=nid;
 
+
+
+end;
+
+procedure TNardViewFrm.btnGetImageClick(Sender: TObject);
+var
+nid,tmpInt:integer;
+b1,b2,aType:byte;
+aDouble:double;
+aBigInt:Int64;
+
+begin
+//get an image..
+  dmDB.qryGen.Active:=False;
+  dmDB.qryGen.SQL.Clear;
+  dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+   nid:=dmDB.seqCommands.GetNextValue;
+  dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_GET)+
+               ',0, '+IntToStr(SG_JPG)+', 0, 0, 0, 0 );');
+
+
+   try
+      dmDB.qryGen.ExecSQL;
+    except on e:exception do
+      begin
+        ShowMessage(e.message);
+      end;
+
+   end;
+   //set new command id to server..
+   //causes clients to refresh dbs..
+   PacketSrv.CommandID:=nid;
 
 
 end;
@@ -228,6 +277,35 @@ begin
    //set new command id to server..
    //causes clients to refresh dbs..
    PacketSrv.CommandID:=nid;
+
+end;
+
+procedure TNardViewFrm.btnSetParamsClick(Sender: TObject);
+var
+nid,tmpInt:integer;
+
+begin
+//set params..
+  dmDB.qryGen.Active:=False;
+  dmDB.qryGen.SQL.Clear;
+  dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+  nid:=dmDB.seqCommands.GetNextValue;
+  dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_PARAMS)+
+    ', '+edP1.Text+', '+edP2.Text+', '+edP3.Text+', '+edP4.Text+', '+edIndex.Text+', 0 );');
+   try
+      dmDB.qryGen.ExecSQL;
+    except on e:exception do
+      begin
+        ShowMessage(e.message);
+      end;
+
+   end;
+   //set new command id to server..
+   //causes clients to refresh dbs..
+   PacketSrv.CommandID:=nid;
+
+
 
 end;
 

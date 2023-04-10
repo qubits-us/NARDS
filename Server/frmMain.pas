@@ -87,6 +87,9 @@ type
     procedure Hashes1Click(Sender: TObject);
     procedure menLogManageClick(Sender: TObject);
     procedure menLogViewClick(Sender: TObject);
+    procedure NardSetParam(aNard: TNardView);
+    procedure NardDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure NardUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
   private
     { Private declarations }
@@ -122,6 +125,7 @@ var
   aHeight,aWidth:integer;
   aView:tNardView;
   aFileName:String;
+  params:TParamSet;
 begin
 
    aGap:=0;
@@ -173,17 +177,44 @@ begin
         aView.NardNumber := dmDb.qryScreenItemsARDID.Value;
         aView.ItemID := dmDb.qryScreenItemsITEMID.Value;
         aView.IsOn :=false;
-        aFileName:=dmDb.qryScreenItemsONLINEIMG.Value;
+        aFileName:=dmDb.qryScreenItemsOFFLINEIMG.Value;
        if FileExists(ExtractFilePath(Application.ExeName)+'\images\'+aFileName) then
         begin
         // start offline..
-       try
-         aView.NardImage.LoadFromFile(ExtractFilePath(Application.ExeName)+'\images\'+aFileName);
-       finally
-         ;
-       end;
+         try
+           aView.NardImage.LoadFromFile(ExtractFilePath(Application.ExeName)+'\images\'+aFileName);
+         finally
+           ;
+         end;
         end else
-           ShowMessage('Bad file name!');
+           mLog.Lines.Insert(0,'Bad file name!');
+
+         if dmDb.qryScreenItemsACTIONID.Value=7 then
+          begin
+          aView.OnDown:=NardDown;
+          aView.OnUp:=NardUp;
+          aView.ParamIndex:=dmDb.qryScreenItemsACTIONVAL.Value;
+          params[0]:=dmDb.qryScreenItemsPARAMUP1.Value;
+          params[1]:=dmDb.qryScreenItemsPARAMUP2.Value;
+          params[2]:=dmDb.qryScreenItemsPARAMUP3.Value;
+          params[3]:=dmDb.qryScreenItemsPARAMUP4.Value;
+          aView.UpParams:=params;
+          params[0]:=dmDb.qryScreenItemsACTIONVALTYPE.Value;
+          params[2]:=dmDb.qryScreenItemsACTIONVALMIN.Value;
+          params[3]:=dmDb.qryScreenItemsACTIONVALMAX.Value;
+          params[1]:=dmDb.qryScreenItemsACTIONVALSTEP.Value;
+          aView.DownParams:=params;
+          aView.NoClick:=true;
+          end;
+         if dmDb.qryScreenItemsACTIONID.Value=6 then
+          begin
+          aView.ParamIndex:=dmDb.qryScreenItemsACTIONVAL.Value;
+          params[0]:=dmDb.qryScreenItemsACTIONVALTYPE.Value;
+          params[2]:=dmDb.qryScreenItemsACTIONVALMIN.Value;
+          params[3]:=dmDb.qryScreenItemsACTIONVALMAX.Value;
+          params[1]:=dmDb.qryScreenItemsACTIONVALSTEP.Value;
+          aView.DownParams:=params;
+          end;
 
          aView.OnClicked:=NardClick;
          aView.OnEndDock:=pnlMainEndDock;
@@ -496,11 +527,43 @@ begin
       //action tab 4.1.2023 ~q
       LayOutFrm.cmbAction.ItemIndex:=dmDb.qryScreenItemsActionID.Value;
       LayOutFrm.edValId.Text:=IntToStr(dmDb.qryScreenItemsActionVal.Value);
+       if LayOutFrm.cmbAction.ItemIndex>5 then
+      LayOutFrm.edParam2.Text:=IntToStr(dmDb.qryScreenItemsActionValType.Value) else
       LayOutFrm.cmbActionValType.ItemIndex:=dmDb.qryScreenItemsActionValType.Value;
       LayOutFrm.edStep.Text:=IntToStr(dmDb.qryScreenItemsActionValStep.Value);
       LayOutFrm.edMin.Text:=IntToStr(dmDb.qryScreenItemsActionValMin.Value);
       LayOutFrm.edMax.Text:=IntToStr(dmDb.qryScreenItemsActionValMax.Value);
+      if LayOutFrm.cmbAction.ItemIndex>5 then
+       begin
+        LayOutFrm.lblStepBy.Caption:='Param 1';
+        LayOutFrm.lblValMin.Caption:='Param 3';
+        LayOutFrm.lblMax.Caption:='Param 4';
+        LayOutFrm.lblIndex.Caption:='Param Id';
+        LayOutFrm.edParam2.Visible:=true;
+        LayOutFrm.lblParam2.Visible:=true;
+        LayOutFrm.cmbActionValType.Visible:=false;
+        LayOutFrm.lblType.Visible:=false;
+        LayOutFrm.tsActionUp.TabVisible:=true;
+        LayOutFrm.tsActionMain.Caption:='Down';
+       end else
+         begin
+         LayOutFrm.lblStepBy.Caption:='Step';
+         LayOutFrm.lblValMin.Caption:='Min';
+         LayOutFrm.lblMax.Caption:='Max';
+         LayOutFrm.lblIndex.Caption:='Val Id';
+         LayOutFrm.edParam2.Visible:=false;
+         LayOutFrm.lblParam2.Visible:=false;
+         LayOutFrm.cmbActionValType.Visible:=true;
+         LayOutFrm.lblType.Visible:=true;
+         LayOutFrm.pcActions.TabIndex:=0;
+         LayOutFrm.tsActionUp.TabVisible:=false;
+         LayOutFrm.tsActionMain.Caption:='Val';
+         end;
 
+      LayOutFrm.edParam1Up.Text:=IntToStr(dmDb.qryScreenItemsParamUp1.Value);
+      LayOutFrm.edParam2Up.Text:=IntToStr(dmDb.qryScreenItemsParamUp2.Value);
+      LayOutFrm.edParam3Up.Text:=IntToStr(dmDb.qryScreenItemsParamUp3.Value);
+      LayOutFrm.edParam4Up.Text:=IntToStr(dmDb.qryScreenItemsParamUp4.Value);
 
       //img tab
       LayOutFrm.edNormalImg.Text:=dmDb.qryScreenItemsONLINEIMG.Value;
@@ -569,31 +632,161 @@ if Sender is tNardView then
       LayoutNard(tNardView(Sender));
     end else
    begin
+    if not tNardView(Sender).NoClick then
+    begin
+      aNardID:=tNardView(Sender).NardNumber;
+      aItemId:=tNardView(Sender).ItemID;
+      ActId:=0;
+      dmDb.qryScreenItems.Active:=false;
+      dmDb.qryScreenItems.SQL.Clear;
+      dmDb.qryScreenItems.SQL.Add('Select * from ScreenItems');
+      dmDb.qryScreenItems.SQL.Add('Where ItemId='+IntToStr(aItemID));
+      dmDb.qryScreenItems.Active:=true;
+      if dmDb.qryScreenItems.RecordCount = 1 then
+         begin
+           aCmd:=dmDb.qryScreenItemsActionVal.Value;
+           ActID:=dmDb.qryScreenItemsActionId.Value;
+           case ActID of
+            1:ShowNardInfo(aNardId);//info
+            2:NardExecute(aNardId,aCmd);//exec
+            3:NardToggle(aNardId,aItemId);//tog
+            4:NardSet(aNardId,aItemID);//adj
+            5:NardShowImage(aNardID);//imgs
+            6:NardSetParam(tNardView(Sender));//Set Params
+           end;
 
-    aNardID:=tNardView(Sender).NardNumber;
-    aItemId:=tNardView(Sender).ItemID;
-    ActId:=0;
-    dmDb.qryScreenItems.Active:=false;
-    dmDb.qryScreenItems.SQL.Clear;
-    dmDb.qryScreenItems.SQL.Add('Select * from ScreenItems');
-    dmDb.qryScreenItems.SQL.Add('Where ItemId='+IntToStr(aItemID));
-    dmDb.qryScreenItems.Active:=true;
-    if dmDb.qryScreenItems.RecordCount = 1 then
-       begin
-         aCmd:=dmDb.qryScreenItemsActionVal.Value;
-         ActID:=dmDb.qryScreenItemsActionId.Value;
-         case ActID of
-          1:ShowNardInfo(aNardId);//info
-          2:NardExecute(aNardId,aCmd);//exec
-          3:NardToggle(aNardId,aItemId);//tog
-          4:NardSet(aNardId,aItemID);//adj
-          5:NardShowImage(aNardID);//imgs
          end;
-
-       end;
-    dmDb.qryScreenItems.Active:=false;
+       dmDb.qryScreenItems.Active:=false;
+    end;
    end;
   end;
+end;
+
+procedure TMainFrm.NardSetParam(aNard: TNardView);
+var
+params:TParamSet;
+NardId,nid,ParamIndx:Integer;
+Online:boolean;
+begin
+//
+if not LayOutMode then
+ begin
+   params:=aNard.DownParams;
+   NardID:=aNard.NardNumber;
+   ParamIndx:=aNard.ParamIndex;
+   Online:=aNard.Online;
+   //set params..
+   if Online then
+    begin
+     dmDB.qryGen.Active:=False;
+     dmDB.qryGen.SQL.Clear;
+     dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+     dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+     nid:=dmDB.seqCommands.GetNextValue;
+     dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_PARAMS)+
+       ', '+IntToStr(params[0])+', '+IntToStr(params[1])+', '+IntToStr(params[2])+', '+
+       IntToStr(params[3])+', '+IntToStr(ParamIndx)+', 0 );');
+       try
+         dmDB.qryGen.ExecSQL;
+       except on e:exception do
+        begin
+          ShowMessage(e.message);
+        end;
+
+       end;
+     //set new command id to server..
+     //causes clients to refresh dbs..
+      PacketSrv.CommandID:=nid;
+    end;//if online
+ end;//not in layoutmode
+end;
+
+
+procedure TMainFrm.NardDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+params:TParamSet;
+NardId,nid,ParamIndx:Integer;
+Online:boolean;
+begin
+  //down
+if not LayOutMode then
+ begin
+  if Sender is tNardView then
+   begin
+  // mLog.Lines.Insert(0,'Down');
+   params:=tNardView(Sender).DownParams;
+   NardID:=tNardView(Sender).NardNumber;
+   ParamIndx:=tNardView(Sender).ParamIndex;
+   Online:=tNardView(Sender).Online;
+   //set params..
+   if Online then
+    begin
+     dmDB.qryGen.Active:=False;
+     dmDB.qryGen.SQL.Clear;
+     dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+     dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+     nid:=dmDB.seqCommands.GetNextValue;
+     dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_PARAMS)+
+       ', '+IntToStr(params[0])+', '+IntToStr(params[1])+', '+IntToStr(params[2])+', '+
+       IntToStr(params[3])+', '+IntToStr(ParamIndx)+', 0 );');
+       try
+         dmDB.qryGen.ExecSQL;
+       except on e:exception do
+        begin
+          ShowMessage(e.message);
+        end;
+
+       end;
+     //set new command id to server..
+     //causes clients to refresh dbs..
+      PacketSrv.CommandID:=nid;
+    end;//if online
+
+   end;//if we are a nard view
+ end;//not in layoutmode
+end;
+
+procedure TMainFrm.NardUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+params:TParamSet;
+NardId,nid,ParamIndx:Integer;
+Online:Boolean;
+begin
+  //down
+if not LayOutMode then
+ begin
+  if Sender is tNardView then
+   begin
+  // mLog.Lines.Insert(0,'Up');
+   params:=tNardView(Sender).UpParams;
+   NardID:=tNardView(Sender).NardNumber;
+   ParamIndx:=tNardView(Sender).ParamIndex;
+   Online:=tNardView(Sender).Online;
+   //set params..
+   if Online then
+    begin
+      dmDB.qryGen.Active:=False;
+      dmDB.qryGen.SQL.Clear;
+      dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+      dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+      nid:=dmDB.seqCommands.GetNextValue;
+      dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_PARAMS)+
+        ', '+IntToStr(params[0])+', '+IntToStr(params[1])+', '+IntToStr(params[2])+', '+
+        IntToStr(params[3])+', '+IntToStr(ParamIndx)+', 0 );');
+        try
+          dmDB.qryGen.ExecSQL;
+        except on e:exception do
+         begin
+          ShowMessage(e.message);
+         end;
+
+        end;
+     //set new command id to server..
+     //causes clients to refresh dbs..
+     PacketSrv.CommandID:=nid;
+    end;
+   end;
+ end;
 end;
 
 
@@ -602,21 +795,31 @@ var
 aFrm:TNardViewFrm;
 begin
      //prep some qrys
-    dmDB.qryNardValues.Active:=False;
+     //values
+    dmDb.qryNardValues.Active:=False;
     dmDb.qryNardValues.SQL.Clear;
     dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNard));
     dmDb.qryNardValues.Active:=true;
+     //params
+    dmDb.qryNardParams.Active:=False;
+    dmDb.qryNardParams.SQL.Clear;
+    dmDb.qryNardParams.SQL.Add('select * from ArdParams a where a.ArdID= '+IntToStr(aNard));
+    dmDb.qryNardParams.Active:=true;
+    //images
     dmDb.qryImg.Active:=false;
     dmDb.qryImg.SQL.Clear;
     dmDb.qryImg.SQL.Add('select * from LogImg');
     dmDb.qryImg.SQL.Add('where ArdId='+IntToStr(aNard));
     dmDb.qryImg.Active:=true;
+
     aFrm:=TNardViewFrm.Create(application);
     aFrm.NardID:=aNard;
     aFrm.edNardID.Text:=IntToStr(aNard);
     aFrm.ShowModal;
     aFrm.Free;
+    //close qrys
     dmDb.qryNardValues.Active:=false;
+    dmDb.qryNardParams.Active:=False;
     dmDb.qryImg.Active:=false;
 
 end;
@@ -1166,6 +1369,7 @@ var
   aIni:tIniFile;
   ServerIp,ServerPort,ServerName:string;
   DbUser,DbPass,DbHost,DbPort,DbName:string;
+  params:tParamSet;
 begin
 
 //will pop up a window on program close noting any leaks..
@@ -1290,7 +1494,7 @@ aIni.Free;//done with you..
         aView.NardNumber := dmDb.qryScreenItemsARDID.Value;
         aView.ItemID := dmDb.qryScreenItemsITEMID.Value;
         aView.IsOn :=false;
-        aFileName:=dmDb.qryScreenItemsONLINEIMG.Value;
+        aFileName:=dmDb.qryScreenItemsOFFLINEIMG.Value;
        if FileExists(ExtractFilePath(Application.ExeName)+'\images\'+aFileName) then
         begin
         // start offline..
@@ -1302,9 +1506,37 @@ aIni.Free;//done with you..
         end else
            ShowMessage('Bad file name!');
 
+
+         if dmDb.qryScreenItemsACTIONID.Value=7 then
+          begin
+          aView.OnDown:=NardDown;
+          aView.OnUp:=NardUp;
+          aView.ParamIndex:=dmDb.qryScreenItemsACTIONVAL.Value;
+          params[0]:=dmDb.qryScreenItemsPARAMUP1.Value;
+          params[1]:=dmDb.qryScreenItemsPARAMUP2.Value;
+          params[2]:=dmDb.qryScreenItemsPARAMUP3.Value;
+          params[3]:=dmDb.qryScreenItemsPARAMUP4.Value;
+          aView.UpParams:=params;
+          params[0]:=dmDb.qryScreenItemsACTIONVALTYPE.Value;
+          params[2]:=dmDb.qryScreenItemsACTIONVALMIN.Value;
+          params[3]:=dmDb.qryScreenItemsACTIONVALMAX.Value;
+          params[1]:=dmDb.qryScreenItemsACTIONVALSTEP.Value;
+          aView.DownParams:=params;
+          aView.NoClick:=true;
+          end;
+         if dmDb.qryScreenItemsACTIONID.Value=6 then
+          begin
+          aView.ParamIndex:=dmDb.qryScreenItemsACTIONVAL.Value;
+          params[0]:=dmDb.qryScreenItemsACTIONVALTYPE.Value;
+          params[2]:=dmDb.qryScreenItemsACTIONVALMIN.Value;
+          params[3]:=dmDb.qryScreenItemsACTIONVALMAX.Value;
+          params[1]:=dmDb.qryScreenItemsACTIONVALSTEP.Value;
+          aView.DownParams:=params;
+          end;
+
          aView.OnClicked:=NardClick;
          aView.OnEndDock:=pnlMainEndDock;
-         aView.OnLine := true;
+         aView.OnLine := false;
         Nards.Add(aView);
        try
         dmDb.qryScreenItems.Next;

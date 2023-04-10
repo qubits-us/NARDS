@@ -164,6 +164,18 @@ type
     qryFirmwareListFILENAME: TZUnicodeStringField;
     qryFirmwareListNOTE: TZUnicodeStringField;
     qrySourceListSKETCH: TZBlobField;
+    qryNardParams: TZQuery;
+    qryNardParamsARDID: TZIntegerField;
+    qryNardParamsPARAMINDEX: TZIntegerField;
+    qryNardParamsDISPLAYNAME: TZUnicodeStringField;
+    qryNardParamsPARAM1: TZIntegerField;
+    qryNardParamsPARAM2: TZIntegerField;
+    qryNardParamsPARAM3: TZIntegerField;
+    qryNardParamsPARAM4: TZIntegerField;
+    qryScreenItemsPARAMUP1: TZIntegerField;
+    qryScreenItemsPARAMUP2: TZIntegerField;
+    qryScreenItemsPARAMUP3: TZIntegerField;
+    qryScreenItemsPARAMUP4: TZIntegerField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
