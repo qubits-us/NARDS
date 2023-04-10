@@ -196,6 +196,7 @@ type
     procedure OnExecute(aContext: tIdContext);
     function CheckIdent(aHdr: tPacketHdr): boolean;
     procedure piRecvPacket(aPacketCtx: tNardCntx);
+    procedure piRecvNAK(aPacketCtx: tNardCntx);
     procedure piRecvNOP(aPacketCtx: tNardCntx);
     procedure piRecvReg(aNardCtx: tNardCntx);
     procedure piRecvGet(aNardCtx: tNardCntx);
@@ -781,6 +782,7 @@ begin
         c := tNardCntx(aContext.Data).fQryGen.FieldByName('CommandId').AsInteger;
       if (c<>tNardCntx(aContext.Data).fCommandID) then
        begin
+        tNardCntx(aContext.Data).fCommandID:=c;
         tNardCntx(aContext.Data).fHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
        if tNardCntx(aContext.Data).fHdr.Command<> CMD_PARAMS then
         begin
@@ -868,6 +870,7 @@ begin
 
       end else
          begin  //probaby don't need this as i changed to tiReadCommited..
+            tNardCntx(aContext.Data).fCommandID:=c;
            if tNardCntx(aContext.Data).fReshDB > 10 then
             begin
             tNardCntx(aContext.Data).fReshDB:=0;
@@ -1330,7 +1333,7 @@ begin
             begin IncSent;
             aPacketCxt.ZeroSent;
             end;
-            aPacketCxt.fCommandID:=GetCommandID;
+           // aPacketCxt.fCommandID:=GetCommandID;
           end;
 
 
@@ -1344,10 +1347,12 @@ begin
            begin
             try aContext.Connection.IOHandler.ReadBytes(aBuff, SizeOf(tPacketHdr), false);
             aGoodRead := true;
-            except on e: EidReadTimeOut do
+            except on e: Exception do
              begin
              // swallow
-             aGoodRead := false;
+             if e is EidReadTimeOut  then
+             aGoodRead := false else
+             LogError('ThrdExec Error:'+e.Message);
              end;
            end;
           end;
@@ -1424,6 +1429,7 @@ begin
 
         case aPacketCtx.fHdr.Command of
          CMD_NOP: piRecvNOP(aPacketCtx);
+         CMD_NAK: piRecvNAK(aPacketCtx);
          CMD_REG: piRecvReg(aPacketCtx);
          CMD_SET: piRecvSet(aPacketCtx);
          CMD_GET: piRecvGet(aPacketCtx);
@@ -1448,6 +1454,13 @@ begin
  Move(aPacketCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
  aPacketCtx.Context.Connection.IOHandler.Write(aBuff);
  SetLength(aBuff, 0); IncSent;
+end;
+
+procedure tNardServer.piRecvNAK(aPacketCtx: tNardCntx);
+begin
+   //why o' why..
+   LogError('NAK: Option 0:'+IntToStr( aPacketCtx.fHdr.Option[0])+'Option 1:'+
+    IntToStr( aPAcketCtx.fHdr.Option[1])+' NardIp:' + aPacketCtx.Context.Binding.PeerIP);
 end;
 
 
