@@ -97,7 +97,11 @@ CREATE TABLE ScreenItems
     ActionValType integer,
     ActionValMin integer,
     ActionValMax integer, 
-    ActionValStep integer
+    ActionValStep integer,
+    ParamUp1 integer,
+    ParamUp2 integer,
+    ParamUp3 integer,
+    ParamUp4 integer
     );
 
 
@@ -203,3 +207,14 @@ create table LogParams
    
 create index ParamLogByArd on LogParams (ArdID,Stamp);  
  
+CREATE TABLE Panels
+(
+    PanelID integer not null,
+    DisplayName varchar(20),
+    LastIP varchar(12),
+    LastConnection timestamp,
+    DefaultScreen integer
+    );
+
+create index PanelsByID on Panels (PanelID);
+create generator GEN_PANEL_ID;
