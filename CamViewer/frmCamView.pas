@@ -20,6 +20,7 @@ type
     btnConnect: TButton;
     mLog: TMemo;
     btnDiscon: TButton;
+    edBadPacks: TEdit;
     procedure sckCamDataAvailable(Sender: TObject; ErrCode: Word);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -32,6 +33,7 @@ type
     procedure sckCamSocksConnected(Sender: TObject; ErrCode: Word);
     procedure sckCamSocksError(Sender: TObject; Error: Integer; Msg: string);
     procedure sckCamBgException(Sender: TObject; E: Exception; var CanClose: Boolean);
+    procedure btnCloseClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -44,7 +46,9 @@ var
   imgSize:Int32;
   RecvCount:integer;
   imgRecvd:boolean;
+  badPacks:integer;
   CamStrm:tMemoryStream;
+  NumImgs:integer;
 
 implementation
 
@@ -55,15 +59,25 @@ procedure TCamViewFrm.FormCreate(Sender: TObject);
 begin
  //
  SetLength(imgBuff,200000);
- ShowMessage(IntToStr(Length(imgBuff)));
+ //ShowMessage(IntToStr(Length(imgBuff)));
  imgRecvd:=false;
  imgSize:=0;
  RecvCount:=0;
  CamStrm:=tMemoryStream.Create;
  mLog.Lines.Insert(0,'Ready..');
+ sckCam.BufSize:=20000;
+ NumImgs:=0;
+ BadPacks:=0;
 end;
+procedure TCamViewFrm.btnCloseClick(Sender: TObject);
+begin
+Close;
+end;
+
 procedure TCamViewFrm.btnConnectClick(Sender: TObject);
 begin
+imgSize:=0;
+RecvCount:=0;
 sckCam.Port:=edPort.Text;
 sckCam.Addr:=edIp.Text;
 sckCam.Connect;
@@ -73,6 +87,8 @@ end;
 procedure TCamViewFrm.btnDisconClick(Sender: TObject);
 begin
 sckCam.Close;
+RecvCount:=0;
+imgSize:=0;
 end;
 
 procedure TCamViewFrm.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -92,7 +108,7 @@ Len:integer;
 jpg:tJpegImage;
 begin
 //got something..
-
+ jpg:=nil;
  if imgSize=0 then
     begin
      Len:=sckCam.Receive(@imgBuff[0],SizeOf(imgSize));
@@ -115,12 +131,15 @@ begin
          CamStrm.Position:=0;
            try
              jpg:=tJpegImage.Create;
+
              jpg.LoadFromStream(CamStrm);
              imgCam.Picture.Assign(jpg);
 
            except on e:exception do
              begin
               mLog.Lines.Insert(0,e.Message);
+              Inc(BadPacks);
+              edBadPacks.Text:=IntToStr(BadPacks);
              end;
            end;
            if Assigned(jpg) then jpg.Free;

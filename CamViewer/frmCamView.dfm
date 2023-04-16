@@ -33,18 +33,16 @@ object CamViewFrm: TCamViewFrm
     Height = 41
     Align = alTop
     TabOrder = 0
-    ExplicitTop = 40
-    ExplicitWidth = 185
     object Label1: TLabel
       Left = 8
-      Top = 13
+      Top = 16
       Width = 45
       Height = 15
       Caption = 'Nard IP :'
     end
     object lblPort: TLabel
       Left = 232
-      Top = 13
+      Top = 16
       Width = 28
       Height = 15
       Caption = 'Port :'
@@ -55,7 +53,7 @@ object CamViewFrm: TCamViewFrm
       Width = 145
       Height = 23
       TabOrder = 0
-      Text = '192.168.0.141'
+      Text = '192.168.0.129'
     end
     object edPort: TEdit
       Left = 272
@@ -63,7 +61,16 @@ object CamViewFrm: TCamViewFrm
       Width = 121
       Height = 23
       TabOrder = 1
-      Text = '12001'
+      Text = '12100'
+    end
+    object edBadPacks: TEdit
+      Left = 529
+      Top = 12
+      Width = 74
+      Height = 23
+      ReadOnly = True
+      TabOrder = 2
+      Text = '0'
     end
   end
   object pblBottom: TPanel
@@ -73,9 +80,6 @@ object CamViewFrm: TCamViewFrm
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitLeft = 96
-    ExplicitTop = 272
-    ExplicitWidth = 185
     object btnClose: TButton
       Left = 528
       Top = 8
@@ -83,6 +87,7 @@ object CamViewFrm: TCamViewFrm
       Height = 25
       Caption = 'Close'
       TabOrder = 0
+      OnClick = btnCloseClick
     end
     object btnConnect: TButton
       Left = 8
@@ -115,8 +120,6 @@ object CamViewFrm: TCamViewFrm
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
-    Lines.Strings = (
-      'mLog')
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 2
@@ -142,7 +145,7 @@ object CamViewFrm: TCamViewFrm
     OnSocksError = sckCamSocksError
     SocketErrs = wsErrTech
     onException = sckCamException
-    Left = 456
-    Top = 24
+    Left = 528
+    Top = 168
   end
 end
