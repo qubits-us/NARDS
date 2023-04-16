@@ -2325,6 +2325,7 @@ aStrm:tMemoryStream;
             begin
             //access granted
             aNardCtx.fQryGen.Active:=false;
+            aNardCtx.fQryGen.SQL.Clear;
             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGHASH (STAMP, ARDID, HASH, PASS)');
             aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(alu)+', True )');
              try aNardCtx.fQryGen.ExecSQL;
@@ -2353,6 +2354,7 @@ aStrm:tMemoryStream;
                  //access denied
                  SetFailed := true;
                aNardCtx.fQryGen.Active:=false;
+               aNardCtx.fQryGen.SQL.Clear;
                aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGHASH (STAMP, ARDID, HASH, PASS)');
                aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(alu)+', False )');
                 try aNardCtx.fQryGen.ExecSQL;
@@ -2376,10 +2378,36 @@ aStrm:tMemoryStream;
                   end;
                 end;
                end;
-          end else SetFailed:=true;
+          end else
+            begin
+              //unkown hash, log it and nak it..
+               SetFailed:=true;
+               aNardCtx.fQryGen.Active:=false;
+               aNardCtx.fQryGen.SQL.Clear;
+               aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGHASH (STAMP, ARDID, HASH, PASS)');
+               aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(alu)+', False )');
+                try aNardCtx.fQryGen.ExecSQL;
+                  except on e: Exception do
+                  begin
+                    LogError('NardCtx:RecvHash:Logging: ExecSQL Error: ' + e.Message + ' from ip:' +aNardCtx.Context.Binding.PeerIP);
+                    SetFailed := true;
+                    // send a nak
+                    SetLength(aBuff, SizeOf(tPacketHdr));
+                    aNardCtx.fHdr.Command := CMD_NAK;
+                    aNardCtx.fHdr.Option[0] := CMD_HASH;
+                    aNardCtx.fHdr.Option[1] := 0;
+                    aNardCtx.fHdr.Option[2] := 0;
+                    aNardCtx.fHdr.Option[3] := 0;
+                    aNardCtx.fHdr.DataSize := 0;
+                    Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+                    aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+                    SetLength(aBuff, 0);
+                    IncSent;
+                    exit;
+                  end;
+                end;
 
-
-
+            end;
 
       end;
 
@@ -2400,7 +2428,7 @@ aStrm:tMemoryStream;
         TrigSetVar;
         end else
             begin
-             LogError('NardCtx:Hash:Invalid Hash from ip:' +aNardCtx.Context.Binding.PeerIP);
+            // LogError('NardCtx:Hash:Invalid Hash from ip:' +aNardCtx.Context.Binding.PeerIP);
               SetFailed := true;
              // send a fail
              SetLength(aBuff, SizeOf(tPacketHdr));
