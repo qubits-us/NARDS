@@ -1238,8 +1238,8 @@ bool Nard::_register() {
     pack.reg.GroupID = _groupID;
     pack.reg.NardID = _nardID;
     pack.reg.ProcessID = _processID;
-    memcpy(pack.reg.DisplayName, _displayName, sizeof(_displayName));
-    memcpy(pack.reg.IPAddress, _ipAddress, sizeof(_ipAddress));
+    memcpy(pack.reg.DisplayName, _displayName, strlen(_displayName));
+   // memcpy(pack.reg.IPAddress, _ipAddress, strlen(_ipAddress));
     int sent = _nard.write((uint8_t *)&pack, sizeof(NardRegPacket));
   }
 }

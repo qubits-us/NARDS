@@ -55,17 +55,16 @@ struct __attribute__((__packed__)) NardReg {
    uint16_t GroupID;
    uint16_t ProcessID;
    char     DisplayName[20];
-   char     IPAddress [14];
 };
 
 
 
 //nard packet..
 struct __attribute__((__packed__)) NardPacket {
-  byte     Ident[2];
-  byte     Command;
-  byte     Options[4];
-  uint32_t DataSize;
+  byte      Ident[2];
+  uint16_t  Command;
+  byte      Options[4];
+  uint32_t  DataSize;
 };
 
 //nard reg packet..
