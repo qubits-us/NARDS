@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes,Vcl.Dialogs, ZAbstractTable, ZDataset, Data.DB, ZAbstractRODataset,
   ZAbstractDataset, ZAbstractConnection, ZConnection, ZSequence, ZTransaction, ZMemTable, frxClass, frxDBSet,
-  Vcl.Imaging.jpeg,VCL.Forms;
+  Vcl.Imaging.jpeg,VCL.Forms, OverbyteIcsWndControl, OverbyteIcsWSocket;
 
 type
   TdmDB = class(TDataModule)
@@ -176,6 +176,7 @@ type
     qryScreenItemsPARAMUP2: TZIntegerField;
     qryScreenItemsPARAMUP3: TZIntegerField;
     qryScreenItemsPARAMUP4: TZIntegerField;
+    sckUDP: TWSocket;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
@@ -189,6 +190,7 @@ type
     procedure SaveImg;
     function ScrambledEggs(Action, Src, Key : String) : String;
     function Hash(aStr:string):UInt32;
+    procedure BroadCast;
 
   end;
 
@@ -201,7 +203,20 @@ implementation
 
 {$R *.dfm}
 
+  uses uPacketDefs;
 
+
+procedure TDmDb.BroadCast;
+var
+aPacket:tPacketUDP;
+begin
+    FillPacketIdent(aPacket.Ident);
+   try
+    sckUDP.Send(@aPacket,SizeOf(aPacket));
+   finally
+     ;
+   end;
+end;
 
 {
 

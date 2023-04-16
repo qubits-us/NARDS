@@ -102,6 +102,7 @@ var
   MainFrm: TMainFrm;
   LayoutFrm:TNardLayoutFrm;
   ServerIP: String;
+  BroadCastIp:String;
   ServerPort: String;
 
  // Nards: array[0..15] of TNardView;
@@ -117,6 +118,34 @@ implementation
 
 uses frmNardList,frmNardView,frmReportLogs,frmGetStr,frmAbout,frmServerConfig,frmSourceView,frmMsg,
      frmHashList, frmManageLogs,frmLogView,frmNardValAdj,frmNardImages;
+
+
+function IpToBroadcast(ipStr:String):String;
+var
+aCount:integer;
+aPos:integer;
+begin
+result:='';
+//ipStr should be like ###.###.###.###
+//first block
+aPos:=Pos('.',ipStr);
+if aPos>0 then
+result:=Copy(ipStr,1,aPos);
+Delete(ipStr,1,aPos);
+//second block
+aPos:=Pos('.',ipStr);
+if aPos>0 then
+result:=result+Copy(ipStr,1,aPos);
+Delete(ipStr,1,aPos);
+//third block
+aPos:=Pos('.',ipStr);
+if aPos>0 then
+result:=result+Copy(ipStr,1,aPos);
+Delete(ipStr,1,aPos);
+
+result:=result+'255';
+end;
+
 
 
 procedure TMainFrm.RecreateNards;
@@ -1573,6 +1602,13 @@ aIni.Free;//done with you..
   PacketSrv.IP := GStack.LocalAddress;
   ServerIP := PacketSrv.IP;
   sbMain.Panels[1].Text := 'Nards: 0';
+  BroadCastIp:=IpToBroadCast(ServerIp);
+
+  //broadcast nard updates to other terminals
+  dmDb.sckUDP.BufSize:=100;
+  dmDb.sckUDP.LocalAddr:=ServerIP;
+  dmDb.sckUDP.Addr:=BroadCastIp;
+  dmDb.sckUDP.Connect;
 
 end;
 
@@ -1681,6 +1717,7 @@ end;
 procedure TMainFrm.OnVarChanged(Sender: TObject);
 begin
   tmrRefreshNards.Enabled:=true;
+  dmDb.BroadCast;
 end;
 
 procedure TMainFrm.OnServerLog(Sender: TObject);
@@ -1725,6 +1762,7 @@ begin
   mLog.Lines.Insert(0,'Nard connect..');
   sbMain.Panels[1].Text := 'Nards: ' + IntToStr(PacketSrv.Connections);
   tmrRefreshNards.Enabled:=true;
+  dmDb.BroadCast;
 end;
 
 procedure TMainFrm.OnNardDisconnect(Sender:TObject);
@@ -1732,6 +1770,7 @@ begin
   mLog.Lines.Insert(0,'Nard disconnect..');
   sbMain.Panels[1].Text := 'Nards: ' + IntToStr(PacketSrv.Connections);
   tmrRefreshNards.Enabled:=true;
+  dmDb.BroadCast;
 end;
 
 

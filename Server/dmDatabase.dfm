@@ -968,4 +968,20 @@ object dmDB: TdmDB
       FieldName = 'PARAM4'
     end
   end
+  object sckUDP: TWSocket
+    LineEnd = #13#10
+    Addr = '192.168.0.255'
+    Port = '12010'
+    Proto = 'udp'
+    LocalAddr = '0.0.0.0'
+    LocalAddr6 = '::'
+    LocalPort = '0'
+    SocksLevel = '5'
+    ExclusiveAddr = False
+    ComponentOptions = []
+    ListenBacklog = 15
+    SocketErrs = wsErrTech
+    Left = 512
+    Top = 40
+  end
 end
