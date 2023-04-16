@@ -21,7 +21,7 @@ Ident_Packet :array[0..1] of byte = (126, 113);
 MAX_QUES=101;
 MAX_PARAMS=4;
 
-//Command bytes
+//Commands
 CMD_NOP=0;//no opertation
 CMD_ACK=0;//ack same as nop
 CMD_NAK=1;//nack
@@ -33,6 +33,8 @@ CMD_SETNLOG=6;//sets and logs a var
 CMD_HASH=7;//check a hash
 CMD_PARAMS=8;//set or get int16 * MAX_PARAMS
 CMD_OTA=99;//firmware update
+
+CMD_SETID=1000;
 
 
 //set and get value types..
@@ -57,6 +59,9 @@ PARAMS_GET = 0;
 PARAMS_SET = 1;
 PARAMS_SETNLOG = 2;
 
+UDP_REFRESH = 0;
+
+
 
 
 
@@ -77,12 +82,19 @@ type
      end;
 
 
+type
+   tPacketUDP = packed record
+     Ident : TIdentArray;
+     Command:UInt16;
+   end;
+
+
 //packet header, preceeds all packets..
 type
  pPacketHdr = ^tPacketHdr;
  tPacketHdr = packed record
   Ident : TIdentArray;//2 bytes
-  Command : byte;//1 byte
+  Command : UInt16;//2 byte
   Option :array[0..3] of byte;//4 byte
   //-addional data size after header and not including header..
   DataSize : UInt32;//4 bytes
@@ -94,7 +106,7 @@ type
     GroupID:word;
     ProcessID:word;
     DisplayName :array[0..19] of byte;
-    IpAddress   :array[0..13] of byte;
+  //  IpAddress   :array[0..13] of byte;
   end;
 
   type
@@ -120,6 +132,13 @@ type
          header:tPacketHdr;
          params:array[0..3] of Int16;//4 16 bit ints
     end;
+
+    //used by panels..
+type
+   tCommandIdPacket = packed record
+          header:tPacketHdr;
+          CommandID:Int32;
+   end;
 
 
 

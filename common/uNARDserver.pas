@@ -108,6 +108,7 @@ type
     fDrop: integer;
     fReshDB: integer;
     fCommandID:integer;
+    fLastCommandId:integer;
     fContext: tIdContext;
     function GetDrop: integer;
     procedure IncDrop;
@@ -206,6 +207,7 @@ type
     procedure piRecvGetParams(aNardCtx: tNardCntx);
     procedure piRecvSetParams(aNardCtx: tNardCntx);
     procedure piRecvSetnLogParams(aNardCtx: tNardCntx);
+    procedure piSetCommandID(aNardCtx:tNardCntx);
 
   public
     Constructor Create;
@@ -592,6 +594,7 @@ begin
   fSent := 0;
   fNardID := -1;
   fCommandID:=0;
+  fLastCommandId:=0;
   fCrit := TCriticalSection.Create;
   fOutQue := tQueue<tPacketData>.Create;
   fDbConn := TZConnection.Create(nil);
@@ -758,10 +761,6 @@ begin
 
   if tNardCntx(aContext.Data).fRegged then
   begin
-//    tNardCntx(aContext.Data).fDbConn.Disconnect;
-//    sleep(1);
-//    tNardCntx(aContext.Data).fDbConn.Reconnect;
-//    sleep(1);
     tNardCntx(aContext.Data).fQryGen.Active := false;
     tNardCntx(aContext.Data).fQryGen.SQL.Clear;
     tNardCntx(aContext.Data).fQryGen.SQL.Add('select * from ArdCommands a where a.ArdId=' +IntToStr(tNardCntx(aContext.Data).fNardID));
@@ -783,6 +782,7 @@ begin
       if (c<>tNardCntx(aContext.Data).fCommandID) then
        begin
         tNardCntx(aContext.Data).fCommandID:=c;
+        tNardCntx(aContext.Data).fCommandID:=tNardCntx(aContext.Data).fQryGen.FieldByName('CommandId').AsInteger;
         tNardCntx(aContext.Data).fHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
        if tNardCntx(aContext.Data).fHdr.Command<> CMD_PARAMS then
         begin
@@ -840,11 +840,8 @@ begin
           //send it off..
           aContext.Connection.IOHandler.Write(aBuff);
           IncSent;
-          //remember..
-          tNardCntx(aContext.Data).fCommandID:=c;
           //release..
           SetLength(aBuff, 0);
-
 
            //delete command..
            tNardCntx(aContext.Data).fQryGen.Active := false;
@@ -852,31 +849,44 @@ begin
            tNardCntx(aContext.Data).fQryGen.SQL.Add('delete from ArdCommands a where a.CommandId = ' + IntToStr(c));
           try
              tNardCntx(aContext.Data).fQryGen.ExecSQL;
-           finally
+           except on e:exception do
+            begin
              tNardCntx(aContext.Data).fQryGen.Active := false;
+            end else
+              begin
+              //remember..
+              tNardCntx(aContext.Data).fCommandID:=tNardCntx(aContext.Data).fLastCommandID;
+              tNardCntx(aContext.Data).fLastCommandID:=c;
+              end;
           end;
+
        end else
            begin
-             //old command.. try to delete again..
+             //old command.. try to delete..
             tNardCntx(aContext.Data).fQryGen.Active := false;
             tNardCntx(aContext.Data).fQryGen.SQL.Clear;
             tNardCntx(aContext.Data).fQryGen.SQL.Add('delete from ArdCommands a where a.CommandId = ' + IntToStr(c));
              try
                tNardCntx(aContext.Data).fQryGen.ExecSQL;
-             finally
+             except on e:exception do
+               begin
                tNardCntx(aContext.Data).fQryGen.Active := false;
+               end else
+                 begin
+                  //remember..
+                 tNardCntx(aContext.Data).fCommandID:=tNardCntx(aContext.Data).fLastCommandID;
+                 tNardCntx(aContext.Data).fLastCommandID:=c;
+                 end;
              end;
            end;
 
       end else
          begin  //probaby don't need this as i changed to tiReadCommited..
-            tNardCntx(aContext.Data).fCommandID:=c;
+           // tNardCntx(aContext.Data).fCommandID:=c;
            if tNardCntx(aContext.Data).fReshDB > 10 then
             begin
             tNardCntx(aContext.Data).fReshDB:=0;
-            //tNardCntx(aContext.Data).fDbConn.Disconnect;
             sleep(1);
-            //tNardCntx(aContext.Data).fDbConn.Reconnect;
             end else Inc(tNardCntx(aContext.Data).fReshDB);
          end;
 
@@ -1442,6 +1452,7 @@ begin
                        PARAMS_SETNLOG: piRecvSetnLogParams(aPacketCtx);
                        end;
                      end;
+         CMD_SETID: piSetCommandId(aPacketCtx);
         end;
 
 end;
@@ -1461,6 +1472,21 @@ begin
    //why o' why..
    LogError('NAK: Option 0:'+IntToStr( aPacketCtx.fHdr.Option[0])+'Option 1:'+
     IntToStr( aPAcketCtx.fHdr.Option[1])+' NardIp:' + aPacketCtx.Context.Binding.PeerIP);
+end;
+
+procedure tNardServer.piSetCommandID(aNardCtx: tNardCntx);
+var
+aInt: Int32;//32 bits signed..
+failed:boolean;
+begin
+ //
+         failed:=false;
+        if sizeOf(aNardCtx.fBuff) = sizeOf(Int32) then
+         move(aNardCtx.fBuff[0],aInt,SizeOf(Int32)) else Failed := true;
+       if not failed then
+          begin
+           SetCommandId(aInt);
+          end;
 end;
 
 
@@ -1517,13 +1543,17 @@ begin
           // a new nard!!
           aName := TEncoding.ASCII.GetString(aReg.DisplayName);
           aName:=Trim(aName);
-          aIp := TEncoding.ASCII.GetString(aReg.IpAddress);
-          aIp:=Trim(aIp);
+          if aName='' then aName:='Nard';
+          aName:='Nard';
+          //aIp := TEncoding.ASCII.GetString(aReg.IpAddress);
+         // aIp:=Trim(aIp);
+          aIp:=aNardCtx.Context.Binding.PeerIP;
+
           aNardCtx.fQryGen.Active := false; aNardCtx.fQryGen.SQL.Clear;
           aNardCtx.fQryGen.SQL.Add('insert into ards');
           aNardCtx.fQryGen.SQL.Add('(ARDID, GROUPID, PROCESSID, DISPLAYNAME, LASTIP, LASTCONNECTION, ONLINE)');
-          aNardCtx.fQryGen.SQL.Add('Values ( ' + IntToStr(aReg.NardID) + ', ' +IntToStr(aReg.GroupID) + ', ' + IntToStr(aReg.ProcessID) + ' ,');
-          aNardCtx.fQryGen.SQL.Add('''' + aName + ''', ' + ''' ' + aIp +''', CURRENT_TIMESTAMP, true );');
+          aNardCtx.fQryGen.SQL.Add('Values ( ' + IntToStr(aReg.NardID) + ', ' +IntToStr(aReg.GroupID) + ', ' + IntToStr(aReg.ProcessID) + ' ,'+
+          '''' + aName + ''', ' + '''' + aIp +''', CURRENT_TIMESTAMP, true )');
           try aNardCtx.fQryGen.ExecSQL;
            except on e: Exception do
              begin
@@ -1558,8 +1588,8 @@ begin
          end
           else if aNardCtx.fQryGen.RecordCount = 1 then
          begin
-           aIp :=TEncoding.ASCII.GetString(aReg.IpAddress);
-           aIp := Trim(IP);
+         //  aIp :=TEncoding.ASCII.GetString(aReg.IpAddress);
+          // aIp := Trim(IP);
 
             // a returning nard!!
             aNardCtx.fQryGen.Active := false;
