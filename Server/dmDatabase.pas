@@ -177,6 +177,7 @@ type
     qryScreenItemsPARAMUP3: TZIntegerField;
     qryScreenItemsPARAMUP4: TZIntegerField;
     sckUDP: TWSocket;
+    qryLogRptDISPLAYNAME: TZUnicodeStringField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }

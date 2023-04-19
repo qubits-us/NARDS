@@ -151,7 +151,7 @@ object dmDB: TdmDB
     PrintOptions.Printer = 'HP DeskJet 2130 series'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.CreateDate = 44994.585963588000000000
-    ReportOptions.LastChange = 44994.599204270800000000
+    ReportOptions.LastChange = 45034.431941898150000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'begin'
@@ -276,39 +276,48 @@ object dmDB: TdmDB
         end
         object Memo8: TfrxMemoView
           AllowVectorExport = True
-          Left = 177.637910000000000000
-          Width = 68.031540000000000000
-          Height = 18.897637795275600000
+          Left = 166.299320000000000000
+          Width = 22.677180000000000000
+          Height = 18.897637800000000000
           Frame.Typ = []
           Memo.UTF8W = (
             'ID')
         end
         object Memo9: TfrxMemoView
           AllowVectorExport = True
-          Left = 268.346630000000000000
-          Width = 60.472480000000000000
-          Height = 18.897637795275600000
+          Left = 204.094620000000000000
+          Width = 37.795300000000000000
+          Height = 18.897637800000000000
           Frame.Typ = []
           Memo.UTF8W = (
             'Index')
         end
         object Memo10: TfrxMemoView
           AllowVectorExport = True
-          Left = 343.937230000000000000
+          Left = 434.645950000000000000
           Width = 86.929190000000000000
-          Height = 18.897637795275600000
+          Height = 18.897637800000000000
           Frame.Typ = []
           Memo.UTF8W = (
             'Integer')
         end
         object Memo11: TfrxMemoView
           AllowVectorExport = True
-          Left = 498.897960000000000000
+          Left = 555.590910000000000000
           Width = 94.488250000000000000
           Height = 18.897637800000000000
           Frame.Typ = []
           Memo.UTF8W = (
             'Float')
+        end
+        object Memo13: TfrxMemoView
+          AllowVectorExport = True
+          Left = 253.228510000000000000
+          Width = 94.488250000000000000
+          Height = 18.897650000000000000
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'Name')
         end
       end
       object MasterData1: TfrxMasterData
@@ -318,7 +327,7 @@ object dmDB: TdmDB
         FillGap.Bottom = 0
         FillGap.Right = 0
         Frame.Typ = []
-        Height = 22.677180000000000000
+        Height = 18.897674410000000000
         Top = 211.653680000000000000
         Width = 740.409927000000000000
         DataSet = dsLogs
@@ -326,9 +335,9 @@ object dmDB: TdmDB
         RowCount = 0
         object Memo3: TfrxMemoView
           AllowVectorExport = True
-          Left = 173.858380000000000000
-          Top = 0.000024410000000003
-          Width = 71.811070000000000000
+          Left = 166.299320000000000000
+          Top = 0.000024410000000002
+          Width = 34.015770000000000000
           Height = 15.118120000000000000
           Frame.Typ = []
           Memo.UTF8W = (
@@ -336,30 +345,30 @@ object dmDB: TdmDB
         end
         object Memo4: TfrxMemoView
           AllowVectorExport = True
-          Left = 264.567100000000000000
-          Top = 0.000024410000000003
-          Width = 60.472480000000000000
-          Height = 18.897650000000000000
+          Left = 204.094620000000000000
+          Top = 0.000024410000000002
+          Width = 37.795300000000000000
+          Height = 15.118110236220470000
           Frame.Typ = []
           Memo.UTF8W = (
             '[frxDBDataset1."VALUEINDEX"]')
         end
         object Memo5: TfrxMemoView
           AllowVectorExport = True
-          Left = 340.157700000000000000
-          Top = 0.000024410000000003
-          Width = 139.842610000000000000
-          Height = 18.897650000000000000
+          Left = 434.645950000000000000
+          Top = 0.000024410000000002
+          Width = 109.606370000000000000
+          Height = 15.118110236220470000
           Frame.Typ = []
           Memo.UTF8W = (
             '[frxDBDataset1."VALUEINT"]')
         end
         object Memo6: TfrxMemoView
           AllowVectorExport = True
-          Left = 495.118430000000000000
-          Top = 0.000024410000000003
-          Width = 215.433210000000000000
-          Height = 18.897650000000000000
+          Left = 555.590910000000000000
+          Top = 0.000024410000000002
+          Width = 147.401670000000000000
+          Height = 15.118110236220470000
           Frame.Typ = []
           Memo.UTF8W = (
             '[frxDBDataset1."VALUEFLOAT"]')
@@ -372,6 +381,19 @@ object dmDB: TdmDB
           Frame.Typ = []
           Memo.UTF8W = (
             '[frxDBDataset1."STAMP"]')
+        end
+        object frxDBDataset1DISPLAYNAME: TfrxMemoView
+          IndexTag = 1
+          AllowVectorExport = True
+          Left = 249.448980000000000000
+          Width = 158.740260000000000000
+          Height = 15.118110236220470000
+          DataField = 'DISPLAYNAME'
+          DataSet = dsLogs
+          DataSetName = 'frxDBDataset1'
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[frxDBDataset1."DISPLAYNAME"]')
         end
       end
     end
@@ -388,7 +410,14 @@ object dmDB: TdmDB
   object qryLogRpt: TZQuery
     Connection = dbConn
     SQL.Strings = (
-      'select * from logdata')
+      
+        'SELECT r.STAMP, r.ARDID, r.VALUETYPE, r.VALUEINDEX, r.VALUEINT,r' +
+        '.VALUEFLOAT, a.DISPLAYNAME'
+      'FROM LOGDATA r'
+      
+        'join ARDVALUES a on r.ARDID = a.ARDID and r.VALUEINDEX = a.VALIN' +
+        'DEX'
+      '')
     Params = <>
     Left = 496
     Top = 344
@@ -409,6 +438,9 @@ object dmDB: TdmDB
     end
     object qryLogRptVALUEFLOAT: TZDoubleField
       FieldName = 'VALUEFLOAT'
+    end
+    object qryLogRptDISPLAYNAME: TZUnicodeStringField
+      FieldName = 'DISPLAYNAME'
     end
   end
   object mtReportTitle: TZMemTable

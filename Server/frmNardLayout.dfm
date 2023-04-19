@@ -41,7 +41,6 @@ object NardLayoutFrm: TNardLayoutFrm
     Caption = 'Save'
     TabOrder = 0
     OnClick = btnUpdateClick
-    ExplicitTop = 296
   end
   object DBGrid1: TDBGrid
     Left = 306
@@ -144,14 +143,13 @@ object NardLayoutFrm: TNardLayoutFrm
     Caption = 'Show'
     TabOrder = 5
     OnClick = btnSetVClick
-    ExplicitTop = 296
   end
   object pcMain: TPageControl
     Left = 8
     Top = 8
     Width = 281
     Height = 310
-    ActivePage = tsAct
+    ActivePage = tsGen
     TabOrder = 6
     object tsGen: TTabSheet
       Caption = 'Main'
@@ -359,13 +357,14 @@ object NardLayoutFrm: TNardLayoutFrm
         TabOrder = 2
         OnClick = btnSelectAClick
       end
-      object Button1: TButton
+      object btnOnImage: TButton
         Left = 224
         Top = 133
         Width = 41
         Height = 25
         Caption = '...'
         TabOrder = 3
+        OnClick = btnOnImageClick
       end
       object edOnImg: TEdit
         Left = 8

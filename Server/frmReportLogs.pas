@@ -24,6 +24,7 @@ type
     procedure btnPreviewClick(Sender: TObject);
     procedure cbAllNardsClick(Sender: TObject);
     procedure cbAllVarsClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -60,14 +61,19 @@ if aEnd<aStart then
 
   dmDB.qryLogRpt.Active:=false;
   dmDB.qryLogRpt.SQL.Clear;
-  dmDb.qryLogRpt.SQL.Add('select * from LogData l');
+  dmDb.qryLogRpt.SQL.Add('SELECT r.STAMP, r.ARDID, r.VALUETYPE, r.VALUEINDEX, r.VALUEINT,r.VALUEFLOAT, a.DISPLAYNAME');
+  dmDb.qryLogRpt.SQL.Add('FROM LOGDATA r');
+  dmDb.qryLogRpt.SQL.Add('join ARDVALUES a on r.ARDID = a.ARDID and r.VALUEINDEX = a.VALINDEX');
+
   dmDb.qryLogRpt.SQL.Add('where');
-  dmDb.qryLogRpt.SQL.Add('l.Stamp BETWEEN CAST('''+FormatDateTime('yyyy-mm-dd hh:nn:ss',aStart)+
+  dmDb.qryLogRpt.SQL.Add('r.Stamp BETWEEN CAST('''+FormatDateTime('yyyy-mm-dd hh:nn:ss',aStart)+
                           ''' AS TIMESTAMP) AND CAST('''+FormatDateTime('yyyy-mm-dd hh:nn:ss',aEnd)+''' AS TIMESTAMP) ');
 if not cbAllNards.Checked then
-  dmDb.qryLogRpt.SQL.Add('AND ARDID='+edNards.Text);
+  dmDb.qryLogRpt.SQL.Add('AND r.ARDID='+edNards.Text);
 if not cbAllVars.Checked then
-  dmDb.qryLogRpt.SQL.Add('AND VALUEINDEX='+edVarId.Text);
+  dmDb.qryLogRpt.SQL.Add('AND r.VALUEINDEX='+edVarId.Text);
+//now let's order by stamp
+  dmDb.qryLogRpt.SQL.Add('order by r.STAMP');
 
  try
   dmDb.qryLogRpt.Active:=true;
@@ -109,6 +115,12 @@ if cbAllVars.Checked then
      begin
      edVarId.Enabled:=true;
      end;
+end;
+
+procedure TReportLogsFrm.FormCreate(Sender: TObject);
+begin
+dtStart.DateTime:=now-7;
+dtEnd.DateTime:=now;
 end;
 
 end.

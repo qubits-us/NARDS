@@ -37,7 +37,7 @@ type
     lblAlert: TLabel;
     edAlertImg: TEdit;
     btnSelectA: TButton;
-    Button1: TButton;
+    btnOnImage: TButton;
     edOnImg: TEdit;
     lblOnImg: TLabel;
     lblNormal: TLabel;
@@ -95,6 +95,7 @@ type
     procedure cbShowNameClick(Sender: TObject);
     procedure btnSetVClick(Sender: TObject);
     procedure cmbActionChange(Sender: TObject);
+    procedure btnOnImageClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -179,6 +180,18 @@ if dmDb.qryScreenVals.RecordCount>0 then
   dmDb.qryScreenVals.Refresh;
 
   end;
+end;
+
+procedure TNardLayoutFrm.btnOnImageClick(Sender: TObject);
+begin
+//select an image...
+dlgSelPic.InitialDir:=ExtractFilePath(Application.ExeName)+'\images\';
+if dlgSelPic.Execute then
+  begin
+   edOnImg.Text:=ExtractFileName(dlgSelPic.FileName);
+   NeedSaved:=true;
+  end;
+
 end;
 
 procedure TNardLayoutFrm.btnSelectAClick(Sender: TObject);

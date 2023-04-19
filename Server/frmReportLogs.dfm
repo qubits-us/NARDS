@@ -12,6 +12,7 @@ object ReportLogsFrm: TReportLogsFrm
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   TextHeight = 15
   object lblStart: TLabel
     Left = 16

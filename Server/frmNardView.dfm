@@ -163,15 +163,15 @@ object NardViewFrm: TNardViewFrm
     Top = 8
     Width = 385
     Height = 272
-    ActivePage = tsImages
+    ActivePage = tsValues
     TabOrder = 8
     object tsValues: TTabSheet
       Caption = 'Values'
       object dgValues: TDBGrid
-        Left = 32
+        Left = 2
         Top = 3
-        Width = 289
-        Height = 196
+        Width = 371
+        Height = 187
         DataSource = dsValues
         TabOrder = 0
         TitleFont.Charset = DEFAULT_CHARSET
@@ -192,21 +192,21 @@ object NardViewFrm: TNardViewFrm
             Expanded = False
             FieldName = 'DISPLAYNAME'
             Title.Caption = 'Name'
-            Width = 100
+            Width = 128
             Visible = True
           end
           item
             Expanded = False
             FieldName = 'VALUEINT'
             Title.Caption = 'Int'
-            Width = 50
+            Width = 70
             Visible = True
           end
           item
             Expanded = False
             FieldName = 'VALUEFLOAT'
             Title.Caption = 'Float'
-            Width = 50
+            Width = 93
             Visible = True
           end>
       end

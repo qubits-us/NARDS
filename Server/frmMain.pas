@@ -828,6 +828,7 @@ begin
     dmDb.qryNardValues.Active:=False;
     dmDb.qryNardValues.SQL.Clear;
     dmDb.qryNardValues.SQL.Add('select * from ArdValues a where a.ArdID= '+IntToStr(aNard));
+    dmDb.qryNardValues.SQL.Add('order by a.ValIndex');
     dmDb.qryNardValues.Active:=true;
      //params
     dmDb.qryNardParams.Active:=False;
