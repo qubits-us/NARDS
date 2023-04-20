@@ -103,6 +103,10 @@ type
     fDbConn: TZConnection;
     fQryGen: TZQuery;
     fBuff: tBytes;
+    fFirmware: tBytes;
+    fOTA_begun: boolean;
+    fOTA_pos:integer;
+    fOTA_chunkSize:integer;
     fHdr: tPacketHdr;
     fSent: integer;
     fDrop: integer;
@@ -200,6 +204,9 @@ type
     procedure piRecvNAK(aPacketCtx: tNardCntx);
     procedure piRecvNOP(aPacketCtx: tNardCntx);
     procedure piRecvReg(aNardCtx: tNardCntx);
+    procedure piOTABegin(aNardCtx: tNardCntx);
+    procedure piOTAChunk(aNardCtx: tNardCntx);
+    procedure piOTAEnd(aNardCtx: tNardCntx);
     procedure piRecvGet(aNardCtx: tNardCntx);
     procedure piRecvSet(aNardCtx: tNardCntx);
     procedure piRecvSetnLog(aNardCtx: tNardCntx);
@@ -595,6 +602,11 @@ begin
   fNardID := -1;
   fCommandID:=0;
   fLastCommandId:=0;
+  SetLength(fFirmware,0);
+  fOTA_begun:=false;
+  fOTA_pos:=0;
+  fOTA_chunkSize:=128;
+
   fCrit := TCriticalSection.Create;
   fOutQue := tQueue<tPacketData>.Create;
   fDbConn := TZConnection.Create(nil);
@@ -736,6 +748,8 @@ var
   aInt:Int32;
   aUInt:UInt32;
   params:array[0..3] of Int16;
+  aStrm:tStream;
+  aFirmID:integer;
 begin
 
 
@@ -784,7 +798,8 @@ begin
         tNardCntx(aContext.Data).fCommandID:=c;
         tNardCntx(aContext.Data).fCommandID:=tNardCntx(aContext.Data).fQryGen.FieldByName('CommandId').AsInteger;
         tNardCntx(aContext.Data).fHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
-       if tNardCntx(aContext.Data).fHdr.Command<> CMD_PARAMS then
+
+       if tNardCntx(aContext.Data).fHdr.Command < CMD_PARAMS then
         begin
           tNardCntx(aContext.Data).fHdr.Option[0] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
           tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
@@ -821,25 +836,73 @@ begin
           end;
         end else
            begin
-           //index is stored in valueint
-           tNardCntx(aContext.Data).fHdr.Option[0] := PARAMS_SET;
-           tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
-           tNardCntx(aContext.Data).fHdr.Option[2] := 0;
-           tNardCntx(aContext.Data).fHdr.Option[3] := 0;
-           tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(params);
-           //params are in the ops
-           params[0]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
-           params[1]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
-           params[2]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
-           params[3]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
-           SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(params));
-           move(params,aBuff[SizeOf(tPacketHdr)],SizeOf(params));
+           if tNardCntx(aContext.Data).fHdr.Command = CMD_PARAMS then
+            begin
+            //index is stored in valueint
+            tNardCntx(aContext.Data).fHdr.Option[0] := PARAMS_SET;
+            tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
+            tNardCntx(aContext.Data).fHdr.Option[2] := 0;
+            tNardCntx(aContext.Data).fHdr.Option[3] := 0;
+            tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(params);
+            //params are in the ops
+            params[0]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
+            params[1]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
+            params[2]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
+            params[3]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
+            SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(params));
+            move(params,aBuff[SizeOf(tPacketHdr)],SizeOf(params));
+            end else
+             if tNardCntx(aContext.Data).fHdr.Command = CMD_OTA then
+              begin
+              //firmware id is on op1
+              aFirmID:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
+              //begin OTA firmware update..
+              tNardCntx(aContext.Data).fQryGen.Active := false;
+              tNardCntx(aContext.Data).fQryGen.SQL.Clear;
+              tNardCntx(aContext.Data).fQryGen.SQL.Add('Select from * firmwares a where a.FirmId = ' + IntToStr(aFirmID));
+               try
+               tNardCntx(aContext.Data).fQryGen.Active := true;
+                except
+                 on e: Exception do
+                 begin
+                  failed := true;
+                 end;
+               end;
+               if not failed then
+                 begin
+                  if tNardCntx(aContext.Data).fQryGen.RecordCount >0 then
+                   begin
+                    aStrm:=tNardCntx(aContext.Data).fQryGen.CreateBlobStream(tNardCntx(aContext.Data).fQryGen.FieldByName('FIRMWARE'),bmRead);
+                    if aStrm.Size>0 then
+                      begin
+                        //got something, store it in the contexts firmware
+                        SetLength(fFirmware,aStrm.Size);
+                        aStrm.ReadBuffer(fFirmware,aStrm.Size);
+                        fOTA_pos:=0;
+                        fOTA_begun:=true;
+                        tNardCntx(aContext.Data).fHdr.Option[0] := OTA_BEGIN;
+                        tNardCntx(aContext.Data).fHdr.Option[1] := 0;
+                        tNardCntx(aContext.Data).fHdr.Option[2] := 0;
+                        tNardCntx(aContext.Data).fHdr.Option[3] := 0;
+                        tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Int32);
+                        SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
+                        aInt := aStrm.Size;
+                        move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
+                        aStrm.Free;
+                      end else failed := true;
+                   end else failed :=true;
+                 end;
+              end;
            end;
+
+        if not failed then
+         begin
           //move header in..
           Move(tNardCntx(aContext.Data).fHdr, aBuff[0], SizeOf(tPacketHdr));
           //send it off..
           aContext.Connection.IOHandler.Write(aBuff);
           IncSent;
+         end;
           //release..
           SetLength(aBuff, 0);
 
@@ -1452,6 +1515,13 @@ begin
                        PARAMS_SETNLOG: piRecvSetnLogParams(aPacketCtx);
                        end;
                      end;
+         CMD_OTA: begin
+                    case aPacketCtx.fHdr.Option[0] of
+                    OTA_BEGIN: piOTABegin(aPacketCtx);
+                    OTA_CHUNK: piOTAChunk(aPacketCtx);
+                    OTA_END:;
+                    end;
+                     end;
          CMD_SETID: piSetCommandId(aPacketCtx);
         end;
 
@@ -1488,6 +1558,205 @@ begin
            SetCommandId(aInt);
           end;
 end;
+
+
+procedure tNardServer.piOTABegin(aNardCtx: tNardCntx);
+var
+ aBuff: TIdBytes;
+aStrm:tStream;
+failed:boolean;
+aInt:Int32;
+begin
+
+failed:=false;
+ if not aNardCtx.fRegged then exit; // outta here..
+
+  if not aNardCtx.fOTA_begun then
+     begin
+              //begin OTA firmware update..
+              aNardCtx.fQryGen.Active := false;
+              aNardCtx.fQryGen.SQL.Clear;
+              aNardCtx.fQryGen.SQL.Add('Select from * firmwares a where a.ArdId = ' + IntToStr(aNardCtx.fNardID));
+               try
+               aNardCtx.fQryGen.Active := true;
+                except
+                 on e: Exception do
+                 begin
+                  failed := true;
+                 end;
+               end;
+               if not failed then
+                 begin
+                  if aNardCtx.fQryGen.RecordCount >0 then
+                   begin
+                    aStrm:=aNardCtx.fQryGen.CreateBlobStream(aNardCtx.fQryGen.FieldByName('FIRMWARE'),bmRead);
+                    if aStrm.Size>0 then
+                      begin
+                        //got something, store it in the contexts firmware
+                        SetLength(aNardCtx.fFirmware,aStrm.Size);
+                        aStrm.ReadBuffer(aNardCtx.fFirmware,aStrm.Size);
+                        aNardCtx.fOTA_pos:=0;
+                        aNardCtx.fOTA_begun:=true;
+                        aNardCtx.fOTA_chunkSize := OTA_DEF_CHUNK_SIZE;
+                        aNardCtx.fHdr.Option[0] := OTA_BEGIN;
+                        aNardCtx.fHdr.Option[1] := 0;
+                        aNardCtx.fHdr.Option[2] := 0;
+                        aNardCtx.fHdr.Option[3] := 0;
+                        aNardCtx.fHdr.DataSize:=SizeOf(Int32);
+                        SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
+                        aInt := aStrm.Size;
+                        move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
+                        aStrm.Free;
+                      end else
+                        begin
+                         failed := true;
+                         aStrm.Free;
+                        end;
+                   end else failed :=true;
+                 aNardCtx.fQryGen.Active := false;
+                 end;
+     end else
+        begin
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_OTA;
+         aNardCtx.fHdr.Option[1] := OTA_BEGIN;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+        end;
+
+end;
+
+
+//OTA Chunk request..
+procedure tNardServer.piOTAChunk(aNardCtx: tNardCntx);
+var
+ aBuff: TIdBytes;
+failed,done:boolean;
+remaining:integer;
+begin
+failed:=false;
+done:=false;
+ if not aNardCtx.fRegged then exit; // outta here..
+
+ if (aNardCtx.fOTA_begun) and (Length(aNardCtx.fFirmware)>0) then
+ begin
+     //we have begun and we have something..
+
+        //check our position..
+        remaining:= (Length(aNardCtx.fFirmware)-1) - aNardCtx.fOTA_pos;
+        if remaining >= aNardCtx.fOTA_chunkSize then
+         begin
+         aNardCtx.fHdr.DataSize := aNardCtx.fOTA_chunkSize;
+         SetLength(aBuff,SizeOf(tPacketHdr)+aNardCtx.fOTA_chunkSize);
+         Move(aNardCtx.fFirmware[aNardCtx.fOTA_pos],aBuff[SizeOf(tPacketHdr)],aNardCtx.fOTA_chunkSize);
+         aNardCtx.fHdr.Option[0]:=OTA_CHUNK;
+         //keep track
+         aNardCtx.fOTA_pos:=aNardCtx.fOTA_pos+aNardCtx.fOTA_chunkSize;
+         end else
+         if remaining > 0 then
+           begin
+           aNardCtx.fHdr.DataSize := remaining;
+           SetLength(aBuff,SizeOf(tPacketHdr)+remaining);
+           Move(aNardCtx.fFirmware[aNardCtx.fOTA_pos],aBuff[SizeOf(tPacketHdr)],remaining);
+           aNardCtx.fHdr.Option[0]:=OTA_CHUNK;
+           //keep track
+           aNardCtx.fOTA_pos:=aNardCtx.fOTA_pos+remaining;
+           end else
+             begin
+               //zero, send OTA_END
+             aNardCtx.fHdr.Option[0]:=OTA_END;
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fOTA_begun := false;
+             aNardCtx.fOTA_pos :=0;
+             aNardCtx.fHdr.DataSize := 0;
+             end;
+
+        // send data back
+        aNardCtx.fHdr.Option[1]:=0;
+        aNardCtx.fHdr.Option[2]:=0;
+        aNardCtx.fHdr.Option[3]:=0;
+        // send a set command back
+        aNardCtx.fHdr.Command := CMD_OTA;
+
+        //move header in
+        Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+        //send it off..
+        aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+        SetLength(aBuff, 0);
+        IncSent;
+
+
+ end else failed:=true;
+
+       if failed then
+         begin
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_OTA;
+         aNardCtx.fHdr.Option[1] := OTA_CHUNK;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+         exit;
+         end;
+
+
+
+end;
+
+procedure tNardServer.piOTAEnd(aNardCtx: tNardCntx);
+var
+ aBuff: TIdBytes;
+begin
+  //
+   if not aNardCtx.fRegged then exit; // outta here..
+
+  if aNardCtx.fOTA_begun then
+     begin
+     aNardCtx.fOTA_begun:=false;
+     aNardCtx.fOTA_pos:=0;
+     // send a ack
+     SetLength(aBuff, SizeOf(tPacketHdr));
+     aNardCtx.fHdr.Command := CMD_ACK;
+     aNardCtx.fHdr.Option[0] := CMD_OTA;
+     aNardCtx.fHdr.Option[1] := OTA_END;
+     aNardCtx.fHdr.Option[2] := 0;
+     aNardCtx.fHdr.Option[3] := 0;
+     aNardCtx.fHdr.DataSize := 0;
+     Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+     aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+     SetLength(aBuff, 0);
+     IncSent;
+     end else
+        begin
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_OTA;
+         aNardCtx.fHdr.Option[1] := OTA_END;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+        end;
+end;
+
+
 
 
 procedure tNardServer.piRecvReg(aNardCtx: tNardCntx);

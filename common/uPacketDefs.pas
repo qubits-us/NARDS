@@ -20,6 +20,7 @@ Ident_Packet :array[0..1] of byte = (126, 113);
 //max items in the q before we start dropping
 MAX_QUES=101;
 MAX_PARAMS=4;
+OTA_DEF_CHUNK_SIZE=128;
 
 //Commands
 CMD_NOP=0;//no opertation
@@ -58,6 +59,11 @@ HASH_FAIL  = 2;
 PARAMS_GET = 0;
 PARAMS_SET = 1;
 PARAMS_SETNLOG = 2;
+
+//option 0
+OTA_BEGIN = 0;
+OTA_CHUNK = 1;
+OTA_END   = 2;
 
 UDP_REFRESH = 0;
 
