@@ -6,6 +6,7 @@
    
 */
 #include "Nards.h"
+#include <Update.h>
 
   Nard::Nard(){
    //init vars   
@@ -359,6 +360,95 @@ bool Nard::_processExe() {
   }
   return result;
 }
+
+
+bool Nard::_onOTAbegin(){
+    int32_t value ;
+    if (_hdr.DataSize == sizeof(int32_t)){
+    //get the firm size  
+    memcpy(&value,&_buff,sizeof(int32_t));
+    _firmSize = value;
+    _firmChunk = 0;
+    _firmRecvd = 0;
+    _OTAbegun = true;
+       Update.begin(_firmSize);
+       //start asking for chunks
+       _hdr.Command = CMD_OTA;
+       _hdr.Options[0] = OTA_CHUNK;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));    
+       return true;                  
+    } else
+      {
+       //send nak back
+       _hdr.Command = CMD_NAK;
+       _hdr.Options[0] = CMD_OTA;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));        
+       return false;
+      }
+}
+
+bool Nard::_onOTAchunk(){
+     //must have something, but can't have too much..  
+    if (_hdr.DataSize > 0 && _hdr.DataSize <= OTA_CHUNK_SIZE && _OTAbegun){
+       _firmChunk++;
+       _firmRecvd+=_hdr.DataSize;
+       Update.write( _buff, _hdr.DataSize);
+       //ask for next chunk
+       _hdr.Command = CMD_OTA;
+       _hdr.Options[0] = OTA_CHUNK;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));    
+       return true;                  
+    } else
+      {
+        if (_OTAbegun){
+          _OTAbegun = false;
+          Update.abort();       
+        }
+       //send nak back
+       _hdr.Command = CMD_NAK;
+       _hdr.Options[0] = CMD_OTA;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));        
+       return false;
+      }
+  
+}
+
+bool Nard::_onOTAend(){
+  if (_firmRecvd == _firmSize){
+   if ( Update.end(true)){
+    ESP.restart();
+   } else
+     {
+       //just send nak back
+       _hdr.Command = CMD_NAK;
+       _hdr.Options[0] = CMD_OTA;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));  
+       _OTAbegun = false;      
+       return false;
+     }
+  } else
+     { //abort update
+       Update.abort();
+       //send nak back
+       _hdr.Command = CMD_NAK;
+       _hdr.Options[0] = CMD_OTA;
+       _hdr.DataSize = 0;
+       int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));   
+       _OTAbegun = false;     
+       return false;
+    
+      }
+}
+
+
+
+
+
 
 //server wants a byte..
 bool Nard::_getByte() {

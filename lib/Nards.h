@@ -49,6 +49,11 @@
 #define PARAM_SET 1
 #define PARAM_SETNLOG 2
 
+#define OTA_BEGIN  0
+#define OTA_CHUNK  1
+#define OTA_END    2
+#define OTA_CHUNK_SIZE 128
+
 //registration structure
 struct __attribute__((__packed__)) NardReg {
    uint16_t NardID;
@@ -162,7 +167,11 @@ private:
   int     _intervalPing;
   unsigned long _lastRecon;
   int    _intervalRecon;
-  byte    _buff[sizeof(NardPacket)*2];
+  byte    _buff[OTA_CHUNK_SIZE];
+  int32_t _firmSize;
+  int32_t _firmRecvd;
+  int    _firmChunk;
+  bool   _OTAbegun;
   ByteGet _byteGet;
   ByteSet _byteSet;
   WordGet _wordGet;
@@ -201,6 +210,9 @@ private:
   bool _getParam();
   bool _setParam();
   bool _onExec();
+  bool _onOTAbegin();
+  bool _onOTAchunk();
+  bool _onOTAend();
   void _processIncoming();  
   void _processACK();
   void _respHash();
