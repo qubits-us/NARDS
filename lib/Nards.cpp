@@ -239,6 +239,20 @@ void Nard::_processIncoming() {
         }
         break;
       }
+      case  CMD_OTA:
+      { 
+        if (_hdr.Options[0]==OTA_BEGIN){
+          _onOTAbegin();
+        } else
+          if (_hdr.Options[0]==OTA_CHUNK){
+            _onOTAchunk();
+          } else
+          if (_hdr.Options[0]==OTA_END){
+            _onOTAend();
+          } 
+        
+        break;
+      }
 }
 }
 
@@ -394,6 +408,7 @@ bool Nard::_onOTAchunk(){
     if (_hdr.DataSize > 0 && _hdr.DataSize <= OTA_CHUNK_SIZE && _OTAbegun){
        _firmChunk++;
        _firmRecvd+=_hdr.DataSize;
+             
        Update.write( _buff, _hdr.DataSize);
        //ask for next chunk
        _hdr.Command = CMD_OTA;

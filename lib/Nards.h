@@ -52,7 +52,7 @@
 #define OTA_BEGIN  0
 #define OTA_CHUNK  1
 #define OTA_END    2
-#define OTA_CHUNK_SIZE 128
+#define OTA_CHUNK_SIZE 1024
 
 //registration structure
 struct __attribute__((__packed__)) NardReg {
