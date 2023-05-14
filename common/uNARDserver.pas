@@ -605,7 +605,7 @@ begin
   SetLength(fFirmware,0);
   fOTA_begun:=false;
   fOTA_pos:=0;
-  fOTA_chunkSize:=128;
+  fOTA_chunkSize:=OTA_DEF_CHUNK_SIZE;
 
   fCrit := TCriticalSection.Create;
   fOutQue := tQueue<tPacketData>.Create;
@@ -854,12 +854,12 @@ begin
             end else
              if tNardCntx(aContext.Data).fHdr.Command = CMD_OTA then
               begin
-              //firmware id is on op1
+              //firmware id is in op1
               aFirmID:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
               //begin OTA firmware update..
               tNardCntx(aContext.Data).fQryGen.Active := false;
               tNardCntx(aContext.Data).fQryGen.SQL.Clear;
-              tNardCntx(aContext.Data).fQryGen.SQL.Add('Select from * firmwares a where a.FirmId = ' + IntToStr(aFirmID));
+              tNardCntx(aContext.Data).fQryGen.SQL.Add('Select * from firmwares a where a.FirmId = ' + IntToStr(aFirmID));
                try
                tNardCntx(aContext.Data).fQryGen.Active := true;
                 except
@@ -1649,8 +1649,8 @@ done:=false;
  begin
      //we have begun and we have something..
 
-        //check our position..
-        remaining:= (Length(aNardCtx.fFirmware)-1) - aNardCtx.fOTA_pos;
+        //bytes remaining..
+        remaining:= Length(aNardCtx.fFirmware) - aNardCtx.fOTA_pos;
         if remaining >= aNardCtx.fOTA_chunkSize then
          begin
          aNardCtx.fHdr.DataSize := aNardCtx.fOTA_chunkSize;
