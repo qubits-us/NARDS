@@ -20,7 +20,6 @@ type
     DBNavigator1: TDBNavigator;
     procedure btnCloseClick(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
-    procedure btnRemoveClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
   private
     { Private declarations }
@@ -35,6 +34,8 @@ var
 implementation
 
 {$R *.dfm}
+
+uses frmMsg,uNARDserver,uPacketDefs;
 
 procedure TFirmwareListFrm.btnAddClick(Sender: TObject);
 var
@@ -80,15 +81,49 @@ begin
 ModalResult:=mrOK;
 end;
 
-procedure TFirmwareListFrm.btnLoadClick(Sender: TObject);
-begin
 //load a firmware..
-
-end;
-
-procedure TFirmwareListFrm.btnRemoveClick(Sender: TObject);
+procedure TFirmwareListFrm.btnLoadClick(Sender: TObject);
+var
+nid:integer;
+aFirmId:integer;
+aName:string;
 begin
-//delete record..
+
+aFirmId:=-1;
+  if dmDb.qryFirmwareList.RecordCount> 0 then
+    begin
+     aFirmId:=dmDb.qryFirmwareListFirmId.Value;
+     aName:=dmDb.qryFirmwareListFileName.Value;
+    end;
+
+ if aFirmId>0 then
+  begin
+   if MsgYesNo('Load firmware: '+IntToStr(aFirmId)+':'+aName) then
+   begin
+     //load a firmware..
+     dmDB.qryGen.Active:=False;
+     dmDB.qryGen.SQL.Clear;
+     dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+     dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+     nid:=dmDB.seqCommands.GetNextValue;
+     dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_OTA)+
+      ', '+IntToStr(aFirmId)+', 0, 0, 0, 0, 0 );');
+     try
+       dmDB.qryGen.ExecSQL;
+      except on e:exception do
+        begin
+        ShowMessage(e.message);
+        end;
+
+     end;
+     //set new command id to server..
+     //causes clients to refresh dbs..
+     PacketSrv.CommandID:=nid;
+     ShowMsg('Firmware update command sent..');
+   end;
+
+  end;
+
 end;
 
 end.
