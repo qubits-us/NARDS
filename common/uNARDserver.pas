@@ -1403,17 +1403,17 @@ begin
            aPacketCxt.Process(aContext);
            // context sent an outgoing count it and zero it..
            if aPacketCxt.PacketsSent > 0 then
-            begin IncSent;
+            begin
+            IncSent;
             aPacketCxt.ZeroSent;
             end;
-           // aPacketCxt.fCommandID:=GetCommandID;
           end;
 
 
          // try to read in a packet header..
          SetLength(aBuff, SizeOf(tPacketHdr));
          aGoodRead := false;
-         aContext.Connection.IOHandler.CheckForDisconnect(true, true);
+         //aContext.Connection.IOHandler.CheckForDisconnect(true, true);
          i := aContext.Connection.IOHandler.InputBuffer.Size;
 
          if i >= SizeOf(tPacketHdr) then
@@ -1521,7 +1521,7 @@ begin
                     OTA_CHUNK: piOTAChunk(aPacketCtx);
                     OTA_END:;
                     end;
-                     end;
+                  end;
          CMD_SETID: piSetCommandId(aPacketCtx);
         end;
 
@@ -1643,8 +1643,13 @@ remaining:integer;
 begin
 failed:=false;
 done:=false;
- if not aNardCtx.fRegged then exit; // outta here..
+ if not aNardCtx.fRegged then
+  begin
+        LogError('NardCtx:OTA Chunk Error: Not Registered - nard ip:' + aNardCtx.Context.Binding.PeerIP);
 
+  exit; // outta here..
+
+ end;
  if (aNardCtx.fOTA_begun) and (Length(aNardCtx.fFirmware)>0) then
  begin
      //we have begun and we have something..
@@ -1697,6 +1702,9 @@ done:=false;
 
        if failed then
          begin
+         LogError('NardCtx:OTA Chunk: FW Size:' +IntToStr(Length(aNardCtx.fFirmware))+ ' from ip:' + aNardCtx.Context.Binding.PeerIP);
+
+
          // send a nak
          SetLength(aBuff, SizeOf(tPacketHdr));
          aNardCtx.fHdr.Command := CMD_NAK;
