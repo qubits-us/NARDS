@@ -12,6 +12,7 @@ object MainFrm: TMainFrm
   Font.Style = []
   Menu = MainMenu1
   OnClose = FormClose
+  OnCreate = FormCreate
   TextHeight = 15
   object pnlBottom: TPanel
     Left = 0
@@ -20,8 +21,6 @@ object MainFrm: TMainFrm
     Height = 51
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 464
-    ExplicitWidth = 679
     DesignSize = (
       744
       51)
@@ -91,7 +90,6 @@ object MainFrm: TMainFrm
       Height = 23
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 3
-      ExplicitWidth = 289
     end
     object btnSend: TButton
       Left = 657
@@ -102,7 +100,6 @@ object MainFrm: TMainFrm
       Caption = 'Send'
       TabOrder = 4
       OnClick = btnSendClick
-      ExplicitLeft = 592
     end
     object cbCR: TCheckBox
       Left = 656
@@ -112,7 +109,6 @@ object MainFrm: TMainFrm
       Anchors = [akTop, akRight]
       Caption = 'CR'
       TabOrder = 5
-      ExplicitLeft = 591
     end
     object cbLF: TCheckBox
       Left = 699
@@ -124,7 +120,6 @@ object MainFrm: TMainFrm
       Checked = True
       State = cbChecked
       TabOrder = 6
-      ExplicitLeft = 634
     end
   end
   object serTerm: TAdTerminal
@@ -147,8 +142,6 @@ object MainFrm: TMainFrm
     ParentColor = False
     ParentFont = False
     TabOrder = 1
-    ExplicitWidth = 624
-    ExplicitHeight = 400
   end
   object MainMenu1: TMainMenu
     Left = 560
@@ -196,7 +189,10 @@ object MainFrm: TMainFrm
     end
   end
   object ComPort: TApdComPort
+    Baud = 9600
     AutoOpen = False
+    DTR = False
+    RTS = False
     TraceName = 'NARD.TRC'
     LogName = 'NARD.LOG'
     OnPortClose = ComPortPortClose

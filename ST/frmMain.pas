@@ -47,6 +47,7 @@ type
     procedure menEmuNoneClick(Sender: TObject);
     procedure menEmuTTYClick(Sender: TObject);
     procedure menEmuVT100Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -82,8 +83,6 @@ begin
            end;
          end;
         end;
-
-
 end;
 
 procedure TMainFrm.btnSendClick(Sender: TObject);
@@ -108,7 +107,6 @@ end;
 procedure TMainFrm.ComPortPortClose(Sender: TObject);
 begin
 btnOpenClose.Caption:='Open';
-
 end;
 
 procedure TMainFrm.ComPortPortOpen(Sender: TObject);
@@ -126,6 +124,12 @@ begin
 if Comport.Open then ComPort.DonePort;
 end;
 
+procedure TMainFrm.FormCreate(Sender: TObject);
+begin
+//create
+  serTerm.StyleElements :=[];
+end;
+
 procedure TMainFrm.menCaptureClick(Sender: TObject);
 begin
 //capture
@@ -138,7 +142,6 @@ if menCapture.Checked then
    menCapture.Checked:=true;
    serTerm.Capture:=cmOn;
    end;
-
 end;
 
 procedure TMainFrm.menEmuNoneClick(Sender: TObject);
@@ -189,7 +192,6 @@ if menTracing.Checked then
      ComPort.Tracing:=tlOn;
      menTracing.Checked:=true;
     end;
-
 end;
 
 end.
