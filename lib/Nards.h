@@ -52,7 +52,10 @@
 #define OTA_BEGIN  0
 #define OTA_CHUNK  1
 #define OTA_END    2
-#define OTA_CHUNK_SIZE 1024
+#define OTA_CHUNK_SIZE 4096
+
+#define RECV_HEADER 0
+#define RECV_EXTRA  1
 
 //registration structure
 struct __attribute__((__packed__)) NardReg {
@@ -162,6 +165,7 @@ private:
   bool  _started;  
   bool  _registered;
   int   _recvCount;
+  byte  _recvState;
   NardPacket _hdr;
   unsigned long _lastPing;
   int     _intervalPing;

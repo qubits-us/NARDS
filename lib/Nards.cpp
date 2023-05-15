@@ -37,6 +37,10 @@
    _processID = 1;   
    _lastRecon = 0;
    _intervalRecon = 10000;   
+   _nard.setTimeout(300);
+   _recvState = RECV_HEADER;
+   _recvCount = 0;
+   
   }
 
 //let's begin
@@ -140,6 +144,7 @@ void Nard::poll() {
   //send a nop
   if (millis() - _lastPing >= _intervalPing) {
     _lastPing = millis();
+    if (!_OTAbegun)
     _ping();
   }
   } else
@@ -165,6 +170,8 @@ void Nard::_reconnect(){
 //check for incoming packets
 bool Nard::_checkIncoming() {
   bool result = false;
+  int extraRecvd = 0;
+ if (_recvState == RECV_HEADER){ 
   //check for incoming packet
   if (_nard.available() >= sizeof(NardPacket)) {
     //have a packet
@@ -174,24 +181,57 @@ bool Nard::_checkIncoming() {
         //matches our ident, copy buff to structure..
         memcpy(&_hdr, &_buff, sizeof(NardPacket));
         //check for extra data..
-        if (_hdr.DataSize>0){
+        if (_hdr.DataSize > 0 && _hdr.DataSize < 512){
           //zero buff
           memset(_buff, 0, sizeof(_buff));
-         if (_nard.read(_buff, _hdr.DataSize) == _hdr.DataSize) {
+          extraRecvd = _nard.read(_buff, _hdr.DataSize);
+         if ( extraRecvd == _hdr.DataSize) {
           result = true;
           //leave eaxtra data in buffer for later processing..
          }
-        } else result = true; //just a header
+        } else if (_hdr.DataSize == 0){
+         result = true; //just a header
+        } else {
+           //need more
+           _recvState = RECV_EXTRA;
+           _recvCount = 0;
+        }
         
-          if (result){ 
+          if (result && _recvState == RECV_HEADER){ 
           //process incoming..
-          _processIncoming();
-         } 
+          _processIncoming();  
       }
       //zero buff
       memset(_buff, 0, sizeof(_buff));
+     }
+    
+   }
+   }
+  } else
+    if (_recvState == RECV_EXTRA){
+      
+     if (_nard.available() >= _hdr.DataSize ) {
+       //recv a chunk
+          extraRecvd = _nard.read(_buff, _hdr.DataSize);
+          _recvCount+=extraRecvd;
+          
+         if ( _recvCount == _hdr.DataSize) {
+          result = true;
+          //leave eaxtra data in buffer for later processing..
+          _recvState = RECV_HEADER;
+          _recvCount = 0;
+         }
+      
+          if (result){ 
+          //process incoming..
+          _processIncoming();  
+          //zero buff
+          memset(_buff, 0, sizeof(_buff));
+           }
+        }
     }
-  }
+  
+  
   return result;
 }
 
@@ -204,7 +244,7 @@ void Nard::_processIncoming() {
         break;
       }
     case CMD_NAK:
-      {
+      { 
         break;
       }
     case CMD_SET:
@@ -379,12 +419,12 @@ bool Nard::_processExe() {
 bool Nard::_onOTAbegin(){
     int32_t value ;
     if (_hdr.DataSize == sizeof(int32_t)){
-    //get the firm size  
-    memcpy(&value,&_buff,sizeof(int32_t));
-    _firmSize = value;
-    _firmChunk = 0;
-    _firmRecvd = 0;
-    _OTAbegun = true;
+       //get the firm size  
+       memcpy(&value,&_buff,sizeof(int32_t));
+       _firmSize = value;
+       _firmChunk = 0;
+       _firmRecvd = 0;
+       _OTAbegun = true;
        Update.begin(_firmSize);
        //start asking for chunks
        _hdr.Command = CMD_OTA;
@@ -408,7 +448,6 @@ bool Nard::_onOTAchunk(){
     if (_hdr.DataSize > 0 && _hdr.DataSize <= OTA_CHUNK_SIZE && _OTAbegun){
        _firmChunk++;
        _firmRecvd+=_hdr.DataSize;
-             
        Update.write( _buff, _hdr.DataSize);
        //ask for next chunk
        _hdr.Command = CMD_OTA;
