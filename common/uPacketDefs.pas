@@ -67,6 +67,9 @@ OTA_END   = 2;
 
 UDP_REFRESH = 0;
 
+RECV_HEADER = 0;
+RECV_EXTRA  = 1;
+
 
 
 

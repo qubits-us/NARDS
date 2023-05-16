@@ -108,6 +108,7 @@ type
     fOTA_pos:integer;
     fOTA_chunkSize:integer;
     fHdr: tPacketHdr;
+    fRecvState: byte;
     fSent: integer;
     fDrop: integer;
     fReshDB: integer;
@@ -598,6 +599,7 @@ Constructor tNardCntx.Create;
 begin
   Inherited;
   SetLength(fBuff, 0);
+  fRecvState := RECV_HEADER;
   fSent := 0;
   fNardID := -1;
   fCommandID:=0;
@@ -750,28 +752,11 @@ var
   params:array[0..3] of Int16;
   aStrm:tStream;
   aFirmID:integer;
+  aHdr:tPacketHdr;
 begin
 
 
   failed := false;
-  i := GetOutGoing;
-
-  if i > 0 then
-  begin
-    // send a que'd outgoing packet
-    aPack := Pop;
-    s := Length(aPack.Data);
-    if s > 0 then
-    begin
-      // got something to send
-      SetLength(aBuff, s);
-      Move(aPack.Data[0], aBuff[0], s);
-      aContext.Connection.IOHandler.Write(aBuff);
-      IncSent;
-      SetLength(aBuff, 0);
-      SetLength(aPack.Data, 0);
-    end;
-  end;
 
   if tNardCntx(aContext.Data).fRegged then
   begin
@@ -797,37 +782,39 @@ begin
        begin
         tNardCntx(aContext.Data).fCommandID:=c;
         tNardCntx(aContext.Data).fCommandID:=tNardCntx(aContext.Data).fQryGen.FieldByName('CommandId').AsInteger;
-        tNardCntx(aContext.Data).fHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
+        aHdr.Command := tNardCntx(aContext.Data).fQryGen.FieldByName('Command').AsInteger;
+        aHdr.Ident[0]:=Ident_Packet[0];
+        aHdr.Ident[1]:=Ident_Packet[1];
 
-       if tNardCntx(aContext.Data).fHdr.Command < CMD_PARAMS then
+       if aHdr.Command < CMD_PARAMS then
         begin
-          tNardCntx(aContext.Data).fHdr.Option[0] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
-          tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
-          tNardCntx(aContext.Data).fHdr.Option[2] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
-          tNardCntx(aContext.Data).fHdr.Option[3] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
-          tNardCntx(aContext.Data).fHdr.DataSize:=0;
+          aHdr.Option[0] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
+          aHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
+          aHdr.Option[2] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op3').AsInteger;
+          aHdr.Option[3] := tNardCntx(aContext.Data).fQryGen.FieldByName('Op4').AsInteger;
+          aHdr.DataSize:=0;
           SetLength(aBuff, SizeOf(tPacketHdr));
-          case tNardCntx(aContext.Data).fHdr.Option[1] of
+          case aHdr.Option[1] of
           SG_INT32:begin
-                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Int32);
+                   aHdr.DataSize:=SizeOf(Int32);
                    SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
                    aInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
                    move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
                    end;
           SG_UINT32:begin
-                    tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(UInt32);
+                    aHdr.DataSize:=SizeOf(UInt32);
                     SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(UInt32));
                     aUInt := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
                     move(aUInt,aBuff[SizeOf(tPacketHdr)],SizeOf(UInt32));
                    end;
           SG_FLT4: begin
-                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Single);
+                   aHdr.DataSize:=SizeOf(Single);
                    SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Single));
                    aSingle := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
                    move(aSingle,aBuff[SizeOf(tPacketHdr)],SizeOf(Single));
                    end;
           SG_FLT8: begin
-                   tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(double);
+                   aHdr.DataSize:=SizeOf(double);
                    SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(double));
                    aDouble := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueFloat').AsFloat;
                    move(aDouble,aBuff[SizeOf(tPacketHdr)],SizeOf(Double));
@@ -836,14 +823,14 @@ begin
           end;
         end else
            begin
-           if tNardCntx(aContext.Data).fHdr.Command = CMD_PARAMS then
+           if aHdr.Command = CMD_PARAMS then
             begin
             //index is stored in valueint
-            tNardCntx(aContext.Data).fHdr.Option[0] := PARAMS_SET;
-            tNardCntx(aContext.Data).fHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
-            tNardCntx(aContext.Data).fHdr.Option[2] := 0;
-            tNardCntx(aContext.Data).fHdr.Option[3] := 0;
-            tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(params);
+            aHdr.Option[0] := PARAMS_SET;
+            aHdr.Option[1] := tNardCntx(aContext.Data).fQryGen.FieldByName('ValueInt').AsInteger;
+            aHdr.Option[2] := 0;
+            aHdr.Option[3] := 0;
+            aHdr.DataSize:=SizeOf(params);
             //params are in the ops
             params[0]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
             params[1]:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op2').AsInteger;
@@ -852,7 +839,7 @@ begin
             SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(params));
             move(params,aBuff[SizeOf(tPacketHdr)],SizeOf(params));
             end else
-             if tNardCntx(aContext.Data).fHdr.Command = CMD_OTA then
+             if aHdr.Command = CMD_OTA then
               begin
               //firmware id is in op1
               aFirmID:=tNardCntx(aContext.Data).fQryGen.FieldByName('Op1').AsInteger;
@@ -880,11 +867,11 @@ begin
                         aStrm.ReadBuffer(fFirmware,aStrm.Size);
                         fOTA_pos:=0;
                         fOTA_begun:=true;
-                        tNardCntx(aContext.Data).fHdr.Option[0] := OTA_BEGIN;
-                        tNardCntx(aContext.Data).fHdr.Option[1] := 0;
-                        tNardCntx(aContext.Data).fHdr.Option[2] := 0;
-                        tNardCntx(aContext.Data).fHdr.Option[3] := 0;
-                        tNardCntx(aContext.Data).fHdr.DataSize:=SizeOf(Int32);
+                        aHdr.Option[0] := OTA_BEGIN;
+                        aHdr.Option[1] := 0;
+                        aHdr.Option[2] := 0;
+                        aHdr.Option[3] := 0;
+                        aHdr.DataSize:=SizeOf(Int32);
                         SetLength(aBuff, SizeOf(tPacketHdr)+SizeOf(Int32));
                         aInt := aStrm.Size;
                         move(aInt,aBuff[SizeOf(tPacketHdr)],SizeOf(Int32));
@@ -898,7 +885,7 @@ begin
         if not failed then
          begin
           //move header in..
-          Move(tNardCntx(aContext.Data).fHdr, aBuff[0], SizeOf(tPacketHdr));
+          Move(aHdr, aBuff[0], SizeOf(tPacketHdr));
           //send it off..
           aContext.Connection.IOHandler.Write(aBuff);
           IncSent;
@@ -1388,7 +1375,7 @@ end;
 
 procedure tNardServer.OnExecute(aContext: tIdContext);
 var
-i: integer;
+i,j: integer;
 aHdr: tPacketHdr; aBuff: TIdBytes; aGoodRead: boolean;
 aPacketCxt: tNardCntx;
 begin
@@ -1397,6 +1384,10 @@ begin
   if Assigned(aContext.Data) then aPacketCxt := tNardCntx(aContext.Data);
   if Assigned(aPacketCxt) then
   begin
+
+  if aPacketCxt.fRecvState = RECV_HEADER then
+   begin
+
          // sends an outgoing packet
         if aPacketCxt.fCommandID<>GetCommandID then
           begin
@@ -1418,7 +1409,8 @@ begin
 
          if i >= SizeOf(tPacketHdr) then
            begin
-            try aContext.Connection.IOHandler.ReadBytes(aBuff, SizeOf(tPacketHdr), false);
+            try
+            aContext.Connection.IOHandler.ReadBytes(aBuff, SizeOf(tPacketHdr), false);
             aGoodRead := true;
             except on e: Exception do
              begin
@@ -1433,18 +1425,39 @@ begin
     if aGoodRead then
       begin
          if Length(aBuff) = SizeOf(tPacketHdr)then
-           begin Move(aBuff[0], aHdr, SizeOf(tPacketHdr));
+            begin
+            Move(aBuff[0], aHdr, SizeOf(tPacketHdr));
             if CheckIdent(aHdr) then
-               begin IncRecv;
+             begin
                // store header in context
                Move(aHdr, aPacketCxt.fHdr, SizeOf(tPacketHdr));
                if aHdr.DataSize > 0 then
-                 begin
+                begin
                   // need to get more data
                   SetLength(aBuff, aHdr.DataSize);
-                  aContext.Connection.IOHandler.ReadBytes(aBuff, aHdr.DataSize, false);
-                  if Length(aBuff) = aHdr.DataSize then
+                  aGoodRead := false;
+                  j:=0;
+                 if aHdr.DataSize< 513 then
+                  begin
+                    i := aContext.Connection.IOHandler.InputBuffer.Size;
+                   if (i>=aHdr.DataSize) then
+                    begin
+                      try
+                       aContext.Connection.IOHandler.ReadBytes(aBuff, aHdr.DataSize, false);
+                       aGoodRead := true;
+                      except on e: Exception do
+                       begin
+                       // swallow
+                        if e is EidReadTimeOut  then
+                         aGoodRead := false else
+                         LogError('ThrdExec Error:'+e.Message);
+                       end;
+                      end;
+                    end;
+
+                  if aGoodRead then
                    begin
+                    IncRecv;//count it..
                     // store extra data in fbuff -context
                     SetLength(aPacketCxt.fBuff, aHdr.DataSize);
                     Move(aBuff[0], aPacketCxt.fBuff[0], aHdr.DataSize);
@@ -1454,10 +1467,18 @@ begin
                    end else
                    begin
                     // bad size
-                    IncBad; SetLength(aPacketCxt.fBuff, 0);
+                    IncBad;
+                    SetLength(aPacketCxt.fBuff, 0);
                     SetLength(aBuff, 0);
                     Log('Bad Data Buffer Size ' + aContext.Binding.PeerIP);
                    end;
+                  end else
+                     begin
+                       //next time around..
+                       aPacketCxt.fRecvState := RECV_EXTRA;
+
+                     end;
+
                 end else
                  begin
                   // recv the packet.. just a header..
@@ -1479,6 +1500,50 @@ begin
               SetLength(aBuff, 0); IncBad;
                Log('Bad Header Buffer Size ' + aContext.Binding.PeerIP);
                end;
+      end;
+
+
+   end else
+      begin
+        //extra data..
+        i := aContext.Connection.IOHandler.InputBuffer.Size;
+        if (i>=aPacketCxt.fHdr.DataSize) then
+         begin
+
+           try
+           aContext.Connection.IOHandler.ReadBytes(aBuff, aPacketCxt.fHdr.DataSize, false);
+           aGoodRead := true;
+            except on e: Exception do
+            begin
+            // swallow
+            if e is EidReadTimeOut  then
+            aGoodRead := false else
+            LogError('ThrdExec Error:'+e.Message);
+            end;
+           end;
+
+           if aGoodRead then
+            begin
+            IncRecv;//count it..
+            // store extra data in fbuff -context
+            SetLength(aPacketCxt.fBuff, aPacketCxt.fHdr.DataSize);
+            Move(aBuff[0], aPacketCxt.fBuff[0], aPacketCxt.fHdr.DataSize);
+            // recv the packet..
+            piRecvPacket(aPacketCxt);
+            SetLength(aBuff, 0);
+            aPacketCxt.fRecvState:=RECV_HEADER;
+            end else
+              begin
+              // bad size
+              IncBad; SetLength(aPacketCxt.fBuff, 0);
+              SetLength(aBuff, 0);
+              Log('Bad Data Buffer Size ' + aContext.Binding.PeerIP);
+              aPacketCxt.fRecvState:=RECV_HEADER;
+              end;
+         end;
+
+
+
       end;
 
   end;
