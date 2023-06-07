@@ -65,7 +65,7 @@ begin
  RecvCount:=0;
  CamStrm:=tMemoryStream.Create;
  mLog.Lines.Insert(0,'Ready..');
- sckCam.BufSize:=20000;
+ sckCam.BufSize:=200000;
  NumImgs:=0;
  BadPacks:=0;
 end;
@@ -115,6 +115,7 @@ begin
       if Len>=sizeOf(imgSize) then
        move(imgBuff[0],imgSize,SizeOf(imgSize));
        RecvCount:=0;
+       mLog.Lines.Insert(0,'Recieving image:'+IntToStr(imgSize));
     end;
 
   if imgSize>0 then
@@ -140,8 +141,11 @@ begin
               mLog.Lines.Insert(0,e.Message);
               Inc(BadPacks);
               edBadPacks.Text:=IntToStr(BadPacks);
+              imgSize:=0;
+              RecvCount:=0;
              end;
            end;
+
            if Assigned(jpg) then jpg.Free;
              imgSize:=0;
              RecvCount:=0;
