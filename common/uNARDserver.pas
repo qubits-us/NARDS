@@ -201,10 +201,13 @@ type
     procedure OnException(aContext: tIdContext; AException: Exception);
     procedure OnExecute(aContext: tIdContext);
     function CheckIdent(aHdr: tPacketHdr): boolean;
+    function CheckNardOnline(aPacketCtx: tNardCntx): boolean;
+    function GetNextCommandID(aPacketCtx: tNardCntx):INT64;
     procedure piRecvPacket(aPacketCtx: tNardCntx);
     procedure piRecvNAK(aPacketCtx: tNardCntx);
     procedure piRecvNOP(aPacketCtx: tNardCntx);
     procedure piRecvReg(aNardCtx: tNardCntx);
+    procedure piExecute(aNardCtx: tNardCntx);
     procedure piOTABegin(aNardCtx: tNardCntx);
     procedure piOTAChunk(aNardCtx: tNardCntx);
     procedure piOTAEnd(aNardCtx: tNardCntx);
@@ -1571,6 +1574,7 @@ begin
          CMD_REG: piRecvReg(aPacketCtx);
          CMD_SET: piRecvSet(aPacketCtx);
          CMD_GET: piRecvGet(aPacketCtx);
+         CMD_EXE: piExecute(aPacketCtx);
          CMD_SETNLOG: piRecvSetnLog(aPacketCtx);
          CMD_HASH: piRecvHash(aPacketCtx);
          CMD_PARAMS: begin
@@ -1591,6 +1595,57 @@ begin
         end;
 
 end;
+
+function tNardServer.CheckNardOnline(aPacketCtx: tNardCntx): Boolean;
+begin
+  //
+    result:=false;
+ if not aPacketCtx.fRegged then exit; // outta here..
+
+        aPacketCtx.fQryGen.Active := false;
+        aPacketCtx.fQryGen.SQL.Clear;
+        aPacketCtx.fQryGen.SQL.Add('select * from ards');
+        aPacketCtx.fQryGen.SQL.Add('where ardid= ' + IntToStr(aPacketCtx.fHdr.NardID));
+       try
+        aPacketCtx.fQryGen.Active := true;
+        except on e:exception do
+         begin
+         LogError('NardCtx:Error opening ARDS: ' +e.Message + ' from ip:' + aPacketCtx.Context.Binding.PeerIP);
+         exit;
+         end;
+       end;
+
+        if aPacketCtx.fQryGen.RecordCount > 0 then
+          begin
+          result:=aPacketCtx.fQryGen.FieldByName('Online').AsBoolean;
+          aPacketCtx.fQryGen.Active:=False;
+          end;
+
+end;
+
+function tNardServer.GetNextCommandID(apacketCtx: tNardCntx): Int64;
+begin
+  result:=0;
+        aPacketCtx.fQryGen.Active := false;
+        aPacketCtx.fQryGen.SQL.Clear;
+        aPacketCtx.fQryGen.SQL.Add('select GEN_ID(GEN_COMMAND_ID, 1) from RDB$DATABASE');
+       try
+        aPacketCtx.fQryGen.Active := true;
+        except on e:exception do
+         begin
+         LogError('NardCtx:Error NextCommandID: ' +e.Message + ' from ip:' + aPacketCtx.Context.Binding.PeerIP);
+         exit;
+         end;
+       end;
+
+        if aPacketCtx.fQryGen.RecordCount > 0 then
+          begin
+          result:=aPacketCtx.fQryGen.FieldByName('GEN_ID').AsLargeInt;
+          aPacketCtx.fQryGen.Active:=False;
+          end;
+
+end;
+
 
 procedure tNardServer.piRecvNOP(aPacketCtx: tNardCntx);
 var aBuff: TIdBytes;
@@ -1622,6 +1677,95 @@ begin
           begin
            SetCommandId(aInt);
           end;
+end;
+
+
+procedure tNardServer.piExecute(aNardCtx: tNardCntx);
+var
+ aBuff: TIdBytes;
+aInt: Int32;//32 bits signed..
+failed:boolean;
+commandID:INT64;
+begin
+ //
+         failed:=false;
+
+        //is it a remote nard..
+      if aNardCtx.fNardID = aNardCtx.fHdr.NardID then
+         begin
+           failed := true;
+         end;
+
+        // is rempote nard online
+       if not CheckNardOnline(aNardCtx) then
+         begin
+           failed := true;
+         end;
+
+       //get next command ID
+     if not failed then
+        begin
+         //add command for remote nard..
+         commandID := GetNextCommandID(aNardCtx);
+         if commandID <1 then failed :=true;
+        end;
+
+    if not failed then
+      begin
+      aNardCtx.fQryGen.Active:=False;
+      aNardCtx.fQryGen.SQL.Clear;
+      aNardCtx.fQryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+      aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4)');
+    //  nid:=dmDB.seqCommands.GetNextValue;
+      aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(CMD_EXE)+', '+IntToStr(aNardCtx.fHdr.Option[0])+', 0, 0, 0);');
+       try
+         aNardCtx.fQryGen.ExecSQL;
+        except on e:exception do
+         begin
+         // ShowMessage(e.message);
+         failed:=true;
+          LogError('NardCtx:Remote Execute Error: SQL :'+e.Message+' - nard ip:' + aNardCtx.Context.Binding.PeerIP);
+
+         end;
+
+       end;
+       if not failed then
+         begin
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_ACK;
+         aNardCtx.fHdr.Option[0] := CMD_EXE;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+
+         //trigger connected nards to process
+         SetCommandId(commandID);
+
+         end;
+
+      end;
+
+      if failed then
+        begin
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_EXE;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+        end;
+
+
 end;
 
 
@@ -1887,15 +2031,13 @@ begin
           aName:=Trim(aName);
           if aName='' then aName:='Nard';
           aName:='Nard';
-          //aIp := TEncoding.ASCII.GetString(aReg.IpAddress);
-         // aIp:=Trim(aIp);
           aIp:=aNardCtx.Context.Binding.PeerIP;
 
           aNardCtx.fQryGen.Active := false; aNardCtx.fQryGen.SQL.Clear;
           aNardCtx.fQryGen.SQL.Add('insert into ards');
-          aNardCtx.fQryGen.SQL.Add('(ARDID, GROUPID, PROCESSID, DISPLAYNAME, LASTIP, LASTCONNECTION, ONLINE)');
+          aNardCtx.fQryGen.SQL.Add('(ARDID, GROUPID, PROCESSID, DISPLAYNAME, LASTIP, LASTCONNECTION, ONLINE, OTASTATUS)');
           aNardCtx.fQryGen.SQL.Add('Values ( ' + IntToStr(aReg.NardID) + ', ' +IntToStr(aReg.GroupID) + ', ' + IntToStr(aReg.ProcessID) + ' ,'+
-          '''' + aName + ''', ' + '''' + aIp +''', CURRENT_TIMESTAMP, true )');
+          '''' + aName + ''', ' + '''' + aIp +''', CURRENT_TIMESTAMP, true, 0 )');
           try aNardCtx.fQryGen.ExecSQL;
            except on e: Exception do
              begin
@@ -1904,10 +2046,13 @@ begin
              // drop db conn
              aNardCtx.fDbConn.Connected := false;
                // send a nak
-             SetLength(aBuff, SizeOf(tPacketHdr)); aNardCtx.fHdr.Command := CMD_NAK;
-             aNardCtx.fHdr.Option[0] := CMD_REG; aNardCtx.fHdr.DataSize := 0;
+             SetLength(aBuff, SizeOf(tPacketHdr));
+             aNardCtx.fHdr.Command := CMD_NAK;
+             aNardCtx.fHdr.Option[0] := CMD_REG;
+             aNardCtx.fHdr.DataSize := 0;
              Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
-             aNardCtx.Context.Connection.IOHandler.Write(aBuff); SetLength(aBuff, 0);
+             aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+             SetLength(aBuff, 0);
              IncSent; regFailed := true;
              end;
           end;
@@ -1930,8 +2075,6 @@ begin
          end
           else if aNardCtx.fQryGen.RecordCount = 1 then
          begin
-         //  aIp :=TEncoding.ASCII.GetString(aReg.IpAddress);
-          // aIp := Trim(IP);
 
             // a returning nard!!
             aNardCtx.fQryGen.Active := false;
@@ -1939,7 +2082,7 @@ begin
             aNardCtx.fQryGen.SQL.Add('UPDATE ARDS a SET a.GroupID= ' +IntToStr(aReg.GroupID) + ', ');
             aNardCtx.fQryGen.SQL.Add('a.ProcessID = ' + IntToStr(aReg.ProcessID) +', '); aNardCtx.fQryGen.SQL.Add('a.LastIP = ''' + aIp + ''', ');
             aNardCtx.fQryGen.SQL.Add('a.LastConnection = CURRENT_TIMESTAMP, ');
-            aNardCtx.fQryGen.SQL.Add('a.Online = TRUE');
+            aNardCtx.fQryGen.SQL.Add('a.Online = TRUE, a.OTAstatus = 0');
             aNardCtx.fQryGen.SQL.Add('WHERE a.ARDID = ' +IntToStr(aReg.NardID) + ' ;');
 
           try aNardCtx.fQryGen.ExecSQL except on e: Exception do

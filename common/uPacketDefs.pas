@@ -103,6 +103,7 @@ type
  pPacketHdr = ^tPacketHdr;
  tPacketHdr = packed record
   Ident : TIdentArray;//2 bytes
+  NardID : UInt16;//2 bytes added 6.13.2023 ~q
   Command : UInt16;//2 byte
   Option :array[0..3] of byte;//4 byte
   //-addional data size after header and not including header..
