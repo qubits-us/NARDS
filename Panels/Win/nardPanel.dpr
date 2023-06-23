@@ -3,7 +3,6 @@ program nardPanel;
 uses
   Vcl.Forms,
   frmMain in 'frmMain.pas' {MainFrm},
-  uNARDserver in '..\common\uNARDserver.pas',
   uPacketDefs in '..\common\uPacketDefs.pas',
   NardView in 'NardView.pas',
   dmDatabase in 'dmDatabase.pas' {dmDB: TDataModule},
@@ -36,7 +35,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Windows11 MineShaft');
-  Application.Title := 'Nard Server';
+  Application.Title := 'Nard Panel';
   Application.CreateForm(TMainFrm, MainFrm);
   Application.Run;
 end.

@@ -7,7 +7,8 @@ uses
   System.Classes,System.IniFiles, Vcl.Graphics,System.Contnrs,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls,
   uPacketDefs, IdStack, Vcl.StdCtrls,Vcl.Themes,
-  NardView, Vcl.Imaging.pngimage,ZDbcIntfs, Vcl.ExtCtrls,dmDatabase, Vcl.ToolWin,frmNardLayout, OverbyteIcsWndControl, OverbyteIcsWSocket;
+  NardView, Vcl.Imaging.pngimage,ZDbcIntfs, Vcl.ExtCtrls,dmDatabase, Vcl.ToolWin,frmNardLayout,
+   OverbyteIcsWndControl, OverbyteIcsWSocket;
 
 type
   TMainFrm = class(TForm)

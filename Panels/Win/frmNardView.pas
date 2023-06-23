@@ -67,7 +67,7 @@ var
 
 implementation
 
-uses uPacketDefs,uNardServer,frmGetStr,frmMain;
+uses uPacketDefs,frmGetStr,frmMain;
 
 {$R *.dfm}
 

@@ -176,6 +176,8 @@ type
     qryScreenItemsPARAMUP2: TZIntegerField;
     qryScreenItemsPARAMUP3: TZIntegerField;
     qryScreenItemsPARAMUP4: TZIntegerField;
+    ArdsQryOTASTATUS: TZIntegerField;
+    tblNardDetailsOTASTATUS: TZIntegerField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
