@@ -57,6 +57,9 @@ object dmDB: TdmDB
       FieldName = 'FIRMWARE'
       Precision = 8
     end
+    object ArdsQryOTASTATUS: TZIntegerField
+      FieldName = 'OTASTATUS'
+    end
   end
   object tblNardDetails: TZTable
     SortedFields = 'ARDID'
@@ -94,6 +97,9 @@ object dmDB: TdmDB
     object tblNardDetailsFIRMWARE: TZBCDField
       FieldName = 'FIRMWARE'
       Precision = 8
+    end
+    object tblNardDetailsOTASTATUS: TZIntegerField
+      FieldName = 'OTASTATUS'
     end
   end
   object seqArds: TZSequence
