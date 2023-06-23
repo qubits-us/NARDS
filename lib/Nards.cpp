@@ -1026,6 +1026,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_BYTE;
@@ -1045,6 +1046,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_WORD;
@@ -1065,6 +1067,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_INT16;
@@ -1085,6 +1088,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_UINT32;
@@ -1107,6 +1111,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_INT32;
@@ -1128,6 +1133,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_FLT4;
@@ -1152,6 +1158,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_BYTE;
@@ -1170,6 +1177,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_WORD;
@@ -1191,6 +1199,7 @@ if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_INT16;
@@ -1211,6 +1220,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_UINT32;
@@ -1232,6 +1242,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_INT32;
@@ -1254,6 +1265,7 @@ if (_started) {
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_FLT4;
@@ -1278,6 +1290,7 @@ if (_started) {
     NardParamPacket pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_PARAMS;
     pack.Hdr.Options[0] = PARAM_SET;
     pack.Hdr.Options[1] = index;
@@ -1305,6 +1318,7 @@ bool Nard::getVar(const uint8_t index, const uint8_t type){
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_GET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = type;
@@ -1314,6 +1328,29 @@ bool Nard::getVar(const uint8_t index, const uint8_t type){
   }
   return !fail;
 }
+
+
+//execute a command on a remote nard..
+bool Nard::remoteCmd(const uint8_t nardId, const uint8_t cmd){
+  bool fail = true;
+  if (!_registered) return !fail;
+    if (_started) {
+    NardPacket Hdr;
+    Hdr.Ident[0] = IDENT_HI;
+    Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = nardId;
+    Hdr.Command = CMD_EXE;
+    Hdr.Options[0] = cmd;
+    Hdr.Options[1] = 0;
+    Hdr.Options[2] = 0;
+    Hdr.Options[3] = 0;
+    Hdr.DataSize = 0;
+    int sent = _nard.write((uint8_t *)&Hdr, sizeof(NardPacket));
+    if (sent == sizeof(NardPacket)) fail = false;
+  }
+  return !fail;
+}
+
 
 bool Nard::_getImg(void){
   bool fail = true;
@@ -1332,6 +1369,7 @@ bool Nard::setJpg(const uint8_t *buff, const int32_t size){
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = 0;
     Hdr.Options[1] = SG_JPG;
@@ -1355,6 +1393,7 @@ bool Nard::logJpg(const uint8_t *buff, const int32_t size){
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = 0;
     Hdr.Options[1] = SG_JPG;
@@ -1395,6 +1434,7 @@ bool Nard::_ping() {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
+    Hdr.NardId = _nardID;
     Hdr.Command = 0;
     Hdr.Options[0] = 0;
     Hdr.DataSize = 0;
@@ -1413,6 +1453,7 @@ bool Nard::checkCode(char *str){
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
+    pack.Hdr.NardId = _nardID;
     pack.Hdr.Command = CMD_HASH;
     pack.Hdr.Options[0] = HASH_CHECK;
     pack.Hdr.Options[1] = 0;

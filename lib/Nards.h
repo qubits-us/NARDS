@@ -70,6 +70,7 @@ struct __attribute__((__packed__)) NardReg {
 //nard packet..
 struct __attribute__((__packed__)) NardPacket {
   byte      Ident[2];
+  uint16_t NardId;
   uint16_t  Command;
   byte      Options[4];
   uint32_t  DataSize;
@@ -147,6 +148,8 @@ public:
   bool setVar(const uint8_t index, const float val);
   //request a var from server..
   bool getVar(const uint8_t index, const uint8_t type);
+  //execute a command on a remote nard..
+  bool remoteCmd(const uint8_t nardId, const uint8_t cmd);
   //logs a new jpg to the server
   bool logJpg(const uint8_t* buff, const int32_t size);
   //sets a new jpg to server
