@@ -7,7 +7,8 @@ CREATE TABLE Ards
     LastIP varchar(12),
     LastConnection timestamp,
     Online boolean,
-    firmware decimal (8,4)
+    firmware decimal (8,4),
+    OTAstatus integer
     );
     
 create index ArdsByID on Ards (ArdID);   

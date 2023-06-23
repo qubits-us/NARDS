@@ -52,7 +52,8 @@ CREATE TABLE ARDS
   LASTIP varchar(20),
   LASTCONNECTION timestamp,
   ONLINE boolean,
-  FIRMWARE decimal(8,4)
+  FIRMWARE decimal(8,4),
+  OTASTATUS integer
 );
 CREATE TABLE ARDVALUES
 (
