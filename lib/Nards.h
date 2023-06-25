@@ -57,6 +57,8 @@
 #define RECV_HEADER 0
 #define RECV_EXTRA  1
 
+#define MAX_STR 512
+
 //registration structure
 struct __attribute__((__packed__)) NardReg {
    uint16_t NardID;
@@ -112,6 +114,8 @@ public:
   typedef bool    (*UInt32Set)(const uint8_t, const uint32_t);  
   typedef bool    (*FloatGet) (const uint8_t, float*);
   typedef bool    (*FloatSet) (const uint8_t, const float);  
+  typedef bool    (*StrGet) (const uint8_t, char*);
+  typedef bool    (*StrSet) (const uint8_t, const char*);  
   typedef bool    (*ExeCmd)   (const uint8_t); 
   typedef void    (*HashResp) (const bool);
   typedef void    (*ImgGet)   (void);
@@ -127,6 +131,7 @@ public:
   void onInt32s(Int32Get getInt32, Int32Set setInt32);
   void onUInt32s(UInt32Get getUInt32, UInt32Set setUInt32);
   void onFloats(FloatGet getFloat, FloatSet setFloat);
+  void onStrings(StrGet getStr, StrSet setStr);
   void onCommand(ExeCmd cmdExe);
   void onHashResp(HashResp respHash);
   void onImage(ImgGet getImg);
@@ -139,6 +144,7 @@ public:
   bool logVar(const uint8_t index, const uint32_t val);
   bool logVar(const uint8_t index, const int32_t val);
   bool logVar(const uint8_t index, const float val);
+  bool logVar(const uint8_t index, const char* val);
   //sets a var without logging..
   bool setVar(const uint8_t index, const uint8_t val);
   bool setVar(const uint8_t index, const uint16_t val);
@@ -146,6 +152,7 @@ public:
   bool setVar(const uint8_t index, const uint32_t val);
   bool setVar(const uint8_t index, const int32_t val);
   bool setVar(const uint8_t index, const float val);
+  bool setVar(const uint8_t index, const char* val);
   //request a var from server..
   bool getVar(const uint8_t index, const uint8_t type);
   //execute a command on a remote nard..
@@ -191,6 +198,8 @@ private:
   UInt32Set  _uint32Set;
   FloatSet  _floatSet;
   FloatGet  _floatGet;
+  StrSet  _strSet;
+  StrGet  _strGet;
   ExeCmd  _exeCmd;
   ParamGet _paramGet;
   ParamSet _paramSet;
@@ -213,6 +222,8 @@ private:
   bool _setUInt32();
   bool _getFloat();
   bool _setFloat();
+  bool _getStr();
+  bool _setStr();
   bool _getImg();
   bool _getParam();
   bool _setParam();

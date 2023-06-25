@@ -26,6 +26,8 @@
    _uint32Set = nullptr;
    _floatGet = nullptr;
    _floatSet = nullptr;
+   _strGet = nullptr;
+   _strSet = nullptr;
    _imgGet = nullptr;
    _paramGet = nullptr;
    _paramSet = nullptr;
@@ -85,6 +87,11 @@ void Nard::onUInt32s(UInt32Get getUInt32, UInt32Set setUInt32) {
 void Nard::onFloats(FloatGet getFloat, FloatSet setFloat) {
   _floatGet = getFloat;
   _floatSet = setFloat;
+}
+
+void Nard::onStrings(StrGet getStr, StrSet setStr) {
+  _strGet = getStr;
+  _strSet = setStr;
 }
 
 void Nard::onCommand(ExeCmd cmdExe) {
@@ -343,6 +350,11 @@ bool Nard::_processSet() {
         _setFloat();
         break;
       }
+        case SG_STR:
+      {
+        _setStr();
+        break;
+      }
 }
 }
 
@@ -379,6 +391,11 @@ bool Nard::_processGet() {
       case SG_FLT4:
       {
         _getFloat();
+        break;
+      }
+      case SG_STR:
+      {
+        _getStr();
         break;
       }
       case SG_JPG:
@@ -498,10 +515,6 @@ bool Nard::_onOTAend(){
     
       }
 }
-
-
-
-
 
 
 //server wants a byte..
@@ -939,6 +952,84 @@ bool Nard::_setFloat() {
 }
 
 
+// Strings..
+
+//server wants a str..
+bool Nard::_getStr() {
+  //should min int32..
+  char result[MAX_STR] ;
+  bool good = false;
+  if (_strGet != nullptr) {
+    good = _strGet(_hdr.Options[0],result);
+    if (good) {
+      //got it, thanks...
+      _hdr.Command = CMD_SET;
+      _hdr.Options[3] = 0;
+      _hdr.Options[2] = 0;
+      _hdr.DataSize = strlen(result);
+      //zero buff
+      memset(_buff, 0, sizeof(_buff));
+      memcpy(&_buff,&_hdr,sizeof(_hdr));
+      memcpy(&_buff[sizeof(_hdr)],result,strlen(result));
+      int sent = _nard.write((uint8_t *)&_buff, sizeof(NardPacket) + _hdr.DataSize);
+      good = (sent == sizeof(NardPacket) + _hdr.DataSize);
+    } else {
+      //bad result..
+      //send nak
+      _hdr.Command = CMD_NAK;
+      _hdr.Options[0] = CMD_GET;
+      _hdr.DataSize = 0;
+      _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+    }
+
+  } else {
+    //no call back, send nak
+    _hdr.Command = CMD_NAK;
+    _hdr.Options[0] = CMD_GET;
+    _hdr.DataSize = 0;
+    _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+  }
+  return good;
+}
+
+
+//server sets a string..
+bool Nard::_setStr() {
+  bool good = false;
+  if (_strSet != nullptr) {
+    char value[_hdr.DataSize+1] ;
+    _buff[_hdr.DataSize] = 0;
+    memcpy(value,&_buff,_hdr.DataSize+1);
+    good = _strSet(_hdr.Options[0], value);
+    if (good) {
+      //got something..
+      //send an ack back
+      _hdr.Command = CMD_ACK;
+      _hdr.Options[0] = CMD_SET;
+      _hdr.DataSize = 0;
+      int sent = _nard.write((uint8_t *)&_hdr, sizeof(NardPacket));
+      good = (sent == sizeof(NardPacket));
+    } else {
+      //nothing..
+      //send an nak back
+      _hdr.Command = CMD_NAK;
+      _hdr.Options[0] = CMD_SET;
+      _hdr.DataSize = 0;
+    }
+  } else {
+    //no call back set..
+    //send an nak back
+    _hdr.Command = CMD_NAK;
+    _hdr.Options[0] = CMD_SET;
+    _hdr.DataSize = 0;
+  }
+  return good;
+}
+
+
+// Params
+
+
 bool Nard::_setParam(){
   bool result = false;
   if (_paramSet != nullptr) {
@@ -1148,6 +1239,32 @@ if (_started) {
 }
 
 
+bool Nard::logVar(const uint8_t index, const char* val){
+   //logs and sets a string
+bool result = false;
+  if (!_registered) return false;
+if (_started) {
+    _hdr.Ident[0] = IDENT_HI;
+    _hdr.Ident[1] = IDENT_LO;
+    _hdr.NardId = _nardID;
+    _hdr.Command = CMD_SETNLOG;
+    _hdr.Options[0] = index;
+    _hdr.Options[1] = SG_STR;
+    _hdr.Options[3] = 0;
+    _hdr.Options[2] = 0;
+    _hdr.DataSize = strlen(val);
+    memcpy(&_buff,&_hdr,sizeof(_hdr));
+    memcpy(&_buff[sizeof(_hdr)],val,strlen(val));
+    
+    int sent = _nard.write((uint8_t *)&_buff, sizeof(_hdr)+_hdr.DataSize);
+    if (sent == (sizeof(_hdr)+_hdr.DataSize)) result = true;
+  }   
+  return result;
+  
+}
+
+
+
 
 
 bool Nard::setVar(const uint8_t index, const uint8_t val){
@@ -1281,6 +1398,31 @@ if (_started) {
 }
 
 
+bool Nard::setVar(const uint8_t index, const char* val){
+   //set a string
+bool result = false;
+  if (!_registered) return false;
+if (_started) {
+    _hdr.Ident[0] = IDENT_HI;
+    _hdr.Ident[1] = IDENT_LO;
+    _hdr.NardId = _nardID;
+    _hdr.Command = CMD_SET;
+    _hdr.Options[0] = index;
+    _hdr.Options[1] = SG_STR;
+    _hdr.Options[3] = 0;
+    _hdr.Options[2] = 0;
+    _hdr.DataSize = strlen(val);
+    memcpy(&_buff,&_hdr,sizeof(_hdr));
+    memcpy(&_buff[sizeof(_hdr)],val,strlen(val));
+    
+    int sent = _nard.write((uint8_t *)&_buff, sizeof(_hdr)+_hdr.DataSize);
+    if (sent == (sizeof(_hdr)+_hdr.DataSize)) result = true;
+  }   
+  return result;
+  
+}
+
+
 bool Nard::setParams(const uint8_t index, const int16_t p1, const int16_t p2, const int16_t p3, const int16_t p4){
    //sends Params to server
 bool result = false;
@@ -1363,8 +1505,8 @@ bool Nard::_getImg(void){
 }
 
 bool Nard::setJpg(const uint8_t *buff, const int32_t size){
-  bool fail = true;
-  if (!_registered) return !fail;
+  bool fail = false;
+  if (!_registered) return fail;
     if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
@@ -1375,10 +1517,10 @@ bool Nard::setJpg(const uint8_t *buff, const int32_t size){
     Hdr.Options[1] = SG_JPG;
     Hdr.DataSize = size;
     int sent = _nard.write((uint8_t *)&Hdr, sizeof(NardPacket));
-    if (sent == sizeof(NardPacket)) fail = false;
+    if (sent =! sizeof(NardPacket)) fail = true;
     if (!fail){
     int sent = _nard.write(buff, size);
-    if (sent == size) fail = false;
+    if (sent =! size) fail = true;
     }  
   }
   return !fail;  
@@ -1387,8 +1529,8 @@ bool Nard::setJpg(const uint8_t *buff, const int32_t size){
 
 
 bool Nard::logJpg(const uint8_t *buff, const int32_t size){
-  bool fail = true;
-  if (!_registered) return !fail;
+  bool fail = false;
+  if (!_registered) return fail;
     if (_started) {
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
@@ -1399,10 +1541,10 @@ bool Nard::logJpg(const uint8_t *buff, const int32_t size){
     Hdr.Options[1] = SG_JPG;
     Hdr.DataSize = size;
     int sent = _nard.write((uint8_t *)&Hdr, sizeof(NardPacket));
-    if (sent == sizeof(NardPacket)) fail = false;
+    if (sent =! sizeof(NardPacket)) fail = true;
     if (!fail){
     int sent = _nard.write(buff, size);
-    if (sent == size) fail = false;
+    if (sent =! size) fail = true;
     }
   }
   return !fail;
