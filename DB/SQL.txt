@@ -19,7 +19,8 @@ CREATE TABLE ArdValues
     ValIndex integer not null,
     DisplayName varchar(20),
     ValueInt bigint,
-    ValueFloat double precision    
+    ValueFloat double precision,
+    ValueStr varchar(512)    
     );
     
 create index ValuesByArd on ArdValues (ArdID, ValIndex);   
@@ -32,7 +33,8 @@ create table LogData
    ValueType integer,
    ValueIndex integer,
    ValueInt bigint,
-   ValueFloat double precision
+   ValueFloat double precision,
+    ValueStr varchar(512)    
    );
    
 create index LogsByArd on LogData (ArdID,Stamp);  
@@ -57,7 +59,8 @@ CREATE TABLE ArdCommands
     Op3 smallint,
     Op4 smallint
     ValueInt bigint,
-    ValueFloat double precision
+    ValueFloat double precision,
+    ValueStr varchar(512)    
     );
     
 

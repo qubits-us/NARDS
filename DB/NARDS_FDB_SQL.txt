@@ -31,7 +31,8 @@ CREATE TABLE ARDCOMMANDS
   OP3 smallint,
   OP4 smallint,
   VALUEINT bigint,
-  VALUEFLOAT double precision
+  VALUEFLOAT double precision,
+  VALUESTR varchar(512)
 );
 CREATE TABLE ARDPARAMS
 (
@@ -61,7 +62,8 @@ CREATE TABLE ARDVALUES
   VALINDEX integer NOT NULL,
   DISPLAYNAME varchar(20),
   VALUEINT bigint,
-  VALUEFLOAT double precision
+  VALUEFLOAT double precision,
+  VALUESTR varchar(512)
 );
 CREATE TABLE FIRMWARES
 (
@@ -89,7 +91,8 @@ CREATE TABLE LOGDATA
   VALUETYPE integer,
   VALUEINDEX integer,
   VALUEINT bigint,
-  VALUEFLOAT double precision
+  VALUEFLOAT double precision,
+  VALUESTR varchar(512)
 );
 CREATE TABLE LOGHASH
 (
