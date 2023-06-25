@@ -55,6 +55,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btnSetParamsClick(Sender: TObject);
     procedure btnGetImageClick(Sender: TObject);
+    procedure cmbTypeChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -213,56 +214,63 @@ begin
   dmDB.qryGen.Active:=False;
   dmDB.qryGen.SQL.Clear;
   dmDB.qryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
-  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT)');
+  dmDB.qryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT, VALUEFLOAT, VALUESTR)');
    nid:=dmDB.seqCommands.GetNextValue;
     case cmbType.ItemIndex of
       SG_BYTE:begin
                b1:=StrToInt(edValue.Text);
                b2:=0;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0, NULL );');
               end;
       SG_WORD:begin
                tmpInt:=StrToInt(edValue.Text);
                b2:= tmpInt and $FF;
                b1:= tmpInt shr 8;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0 );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0, 0, NULL );');
               end;
       SG_INT16:begin
                tmpInt:=StrToInt(edValue.Text);
                b2:= tmpInt and $FF;
                b1:= tmpInt shr 8;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+',0 ,0 );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+',0 ,0, NULL );');
               end;
       SG_INT32:begin
                tmpInt:=StrToInt(edValue.Text);
                b1:= 0;
                b2:= 0;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(tmpInt)+' ,0 );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(tmpInt)+' ,0,NULL );');
               end;
       SG_UINT32:begin
                aBigInt:=StrToInt(edValue.Text);
                b1:= 0;
                b2:= 0;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(aBigInt)+' ,0 );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+','+IntToStr(aBigInt)+' ,0,NULL );');
               end;
       SG_FLT4:begin
                aDouble:=StrToFloat(edValue.Text);
                b1:= 0;
                b2:= 0;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+',NULL );');
               end;
       SG_FLT8:begin
                aDouble:=StrToFloat(edValue.Text);
                b1:= 0;
                b2:= 0;
                dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
-               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' );');
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , '+FloatToStr(aDouble)+' ,NULL );');
+              end;
+      SG_STR :begin
+
+               b1:= 0;
+               b2:= 0;
+               dmDB.qryGen.SQL.Add('VALUES('+IntToStr(nid)+', '+IntToStr(NardID)+', '+IntToStr(CMD_SET)+
+               ', '+edIndex.Text+', '+IntToStr(cmbType.ItemIndex)+', '+IntToStr(b1)+', '+IntToStr(b2)+', 0 , 0,'''+edValue.Text+''' );');
               end;
     end;
 
@@ -306,6 +314,15 @@ begin
    PacketSrv.CommandID:=nid;
 
 
+
+end;
+
+procedure TNardViewFrm.cmbTypeChange(Sender: TObject);
+begin
+if cmbType.ItemIndex = 7 then
+  begin
+    edValue.NumbersOnly:=false;
+  end else edValue.NumbersOnly:=true;
 
 end;
 

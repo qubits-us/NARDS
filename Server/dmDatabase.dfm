@@ -141,6 +141,10 @@ object dmDB: TdmDB
     object LogsQryVALUEFLOAT: TZDoubleField
       FieldName = 'VALUEFLOAT'
     end
+    object LogsQryVALUESTR: TZUnicodeStringField
+      FieldName = 'VALUESTR'
+      Size = 512
+    end
   end
   object dbTrans: TZTransaction
     Connection = dbConn
@@ -524,6 +528,10 @@ object dmDB: TdmDB
     object qryCommandsVALUEFLOAT: TZDoubleField
       FieldName = 'VALUEFLOAT'
     end
+    object qryCommandsVALUESTR: TZUnicodeStringField
+      FieldName = 'VALUESTR'
+      Size = 512
+    end
   end
   object qryNardValues: TZQuery
     Connection = dbConn
@@ -548,6 +556,10 @@ object dmDB: TdmDB
     end
     object qryNardValuesVALUEFLOAT: TZDoubleField
       FieldName = 'VALUEFLOAT'
+    end
+    object qryNardValuesVALUESTR: TZUnicodeStringField
+      FieldName = 'VALUESTR'
+      Size = 512
     end
   end
   object qryScreens: TZQuery

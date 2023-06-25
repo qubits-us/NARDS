@@ -178,6 +178,11 @@ type
     qryScreenItemsPARAMUP4: TZIntegerField;
     sckUDP: TWSocket;
     qryLogRptDISPLAYNAME: TZUnicodeStringField;
+    ArdsQryOTASTATUS: TZIntegerField;
+    tblNardDetailsOTASTATUS: TZIntegerField;
+    LogsQryVALUESTR: TZUnicodeStringField;
+    qryNardValuesVALUESTR: TZUnicodeStringField;
+    qryCommandsVALUESTR: TZUnicodeStringField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }

@@ -116,7 +116,7 @@ object NardViewFrm: TNardViewFrm
   end
   object edValue: TEdit
     Left = 16
-    Top = 213
+    Top = 211
     Width = 121
     Height = 23
     NumbersOnly = True
@@ -149,6 +149,7 @@ object NardViewFrm: TNardViewFrm
     ItemIndex = 0
     TabOrder = 7
     Text = 'Byte'
+    OnChange = cmbTypeChange
     Items.Strings = (
       'Byte'
       'Word'
@@ -156,7 +157,8 @@ object NardViewFrm: TNardViewFrm
       'int32'
       'uint32'
       'Single'
-      'Double')
+      'Double'
+      'String')
   end
   object pgMain: TPageControl
     Left = 228
@@ -185,28 +187,34 @@ object NardViewFrm: TNardViewFrm
             FieldName = 'VALINDEX'
             ReadOnly = True
             Title.Caption = 'Index'
-            Width = 40
+            Width = 32
             Visible = True
           end
           item
             Expanded = False
             FieldName = 'DISPLAYNAME'
             Title.Caption = 'Name'
-            Width = 128
+            Width = 76
             Visible = True
           end
           item
             Expanded = False
             FieldName = 'VALUEINT'
             Title.Caption = 'Int'
-            Width = 70
+            Width = 54
             Visible = True
           end
           item
             Expanded = False
             FieldName = 'VALUEFLOAT'
             Title.Caption = 'Float'
-            Width = 93
+            Width = 65
+            Visible = True
+          end
+          item
+            Expanded = False
+            FieldName = 'VALUESTR'
+            Title.Caption = 'String'
             Visible = True
           end>
       end

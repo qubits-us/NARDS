@@ -211,7 +211,6 @@ object NardLayoutFrm: TNardLayoutFrm
         Width = 145
         Height = 23
         TabOrder = 2
-        Text = 'edName'
       end
       object edHeight: TEdit
         Left = 116
