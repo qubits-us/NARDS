@@ -208,6 +208,7 @@ type
     procedure piRecvNOP(aPacketCtx: tNardCntx);
     procedure piRecvReg(aNardCtx: tNardCntx);
     procedure piExecute(aNardCtx: tNardCntx);
+    function  piSetRemoteVal(aNardCtx: tNardCntx): boolean;
     procedure piOTABegin(aNardCtx: tNardCntx);
     procedure piOTAChunk(aNardCtx: tNardCntx);
     procedure piOTAEnd(aNardCtx: tNardCntx);
@@ -1388,7 +1389,8 @@ end;
 
 procedure tNardServer.OnExecute(aContext: tIdContext);
 var
-i,j: integer;
+j: integer;
+i:UINT32;
 aHdr: tPacketHdr; aBuff: TIdBytes; aGoodRead: boolean;
 aPacketCxt: tNardCntx;
 begin
@@ -1519,6 +1521,7 @@ begin
    end else
       begin
         //extra data..
+        aGoodRead:=false;
         i := aContext.Connection.IOHandler.InputBuffer.Size;
         if (i>=aPacketCxt.fHdr.DataSize) then
          begin
@@ -1688,14 +1691,14 @@ end;
 
 procedure tNardServer.piExecute(aNardCtx: tNardCntx);
 var
- aBuff: TIdBytes;
+aBuff: TIdBytes;
 aInt: Int32;//32 bits signed..
 failed:boolean;
 commandID:INT64;
 begin
  //
          failed:=false;
-
+          commandID:=0;
         //is it a remote nard..
       if aNardCtx.fNardID = aNardCtx.fHdr.NardID then
          begin
@@ -1768,6 +1771,130 @@ begin
          SetLength(aBuff, 0);
          IncSent;
         end;
+
+
+end;
+
+function tNardServer.piSetRemoteVal(aNardCtx: tNardCntx):boolean;
+var
+aBuff: TIdBytes;
+aInt: Int32;//32 bits signed..
+failed:boolean;
+commandID:INT64;
+aDouble:double;//8 byte float..
+aSingle:single;//4 byte float..
+alu : UInt32;//unsigned 32 bit
+aStr:String;
+begin
+  //
+failed:=false;
+           //add command for remote nard..
+         commandID := GetNextCommandID(aNardCtx);
+         if commandID <1 then
+          begin
+          failed :=true;
+          result:=not failed;
+          exit;
+          end;
+
+if not failed then
+ begin
+ aNardCtx.fQryGen.Active:=False;
+ aNardCtx.fQryGen.SQL.Clear;
+ aNardCtx.fQryGen.SQL.Add('INSERT INTO ARDCOMMANDS');
+
+   if aNardCtx.fHdr.Option[1] < SG_INT32 then  // -bytes, words, int16s
+    begin
+    aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4)');
+    aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+     ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+     ','+IntToStr(aNardCtx.fHdr.Option[3])+');');
+    end;
+
+
+   if (aNardCtx.fHdr.Option[1] = SG_INT32) or (aNardCtx.fHdr.Option[1] = SG_UINT32) then  //32 bits ints
+    begin
+      if aNardCtx.fHdr.Option[1] = SG_INT32 then  //int32
+        begin
+        if sizeOf(aNardCtx.fBuff) = sizeOf(Int32) then
+         move(aNardCtx.fBuff[0],aInt,SizeOf(Int32)) else failed := true;
+        end;
+     if aNardCtx.fHdr.Option[1] = SG_UINT32 then  //unit32
+       begin
+        if sizeOf(aNardCtx.fBuff) = sizeOf(UInt32) then
+          move(aNardCtx.fBuff[0],alu,SizeOf(UInt32)) else failed := true;
+       end;
+     if not failed then
+      begin
+       aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEINT)');
+        if aNardCtx.fHdr.Option[1] = SG_INT32 then  //int32
+        aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+          ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+          ','+IntToStr(aNardCtx.fHdr.Option[3])+','+IntToStr(aInt)+');') else
+        aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+          ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+           ','+IntToStr(aNardCtx.fHdr.Option[3])+','+IntToStr(alu)+');');
+      end;
+    end;
+
+    if (aNardCtx.fHdr.Option[1] = SG_FLT4) or (aNardCtx.fHdr.Option[1] = SG_FLT8) then   //floats
+      begin
+       if Length(aNardCtx.fBuff) = sizeOf(single) then
+        begin
+         move(aNardCtx.fBuff[0],aSingle,SizeOf(single));
+         aDouble:=aSingle;
+         end else
+         if Length(aNardCtx.fBuff) = sizeOf(double) then
+           begin
+            move(aNardCtx.fBuff[0],aDouble,SizeOf(double));
+            end else failed:=true;
+      if not failed then
+        begin
+        aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUEFLOAT)');
+        aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+          ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+          ','+IntToStr(aNardCtx.fHdr.Option[3])+','+FloatToStr(aDouble)+');');
+        end;
+      end;
+
+         if (aNardCtx.fHdr.Option[1] = SG_STR) AND (aNardCtx.fHdr.DataSize>0) then  //strings
+          begin
+          aStr:=TEncoding.ASCII.GetString(aNardCtx.fBuff);
+           if not failed then
+           begin
+            aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUESTR)');
+            aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+             ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+              ','+IntToStr(aNardCtx.fHdr.Option[3])+','''+aStr+''');');
+           end;
+
+          end;
+
+    if not failed then
+     begin
+
+       try
+         aNardCtx.fQryGen.ExecSQL;
+        except on e:exception do
+         begin
+         failed:=true;
+          LogError('NardCtx:Remote Set Error: SQL :'+e.Message+' - nard ip:' + aNardCtx.Context.Binding.PeerIP);
+
+         end;
+
+       end;
+     end;
+
+    //trigger remote nard to process
+    if not failed then
+     SetCommandId(commandID);
+
+
+
+ end;
+
+
+    result:=not failed;
 
 
 end;
@@ -2177,10 +2304,22 @@ aBuff: TIdBytes;
 SetFailed: boolean;
 aStrm:tMemoryStream;
 aStr:String;
- begin
+begin
  // set a value
  if not aNardCtx.fRegged then exit; // outta here..
  SetFailed := false;
+
+ if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+  begin
+  // is remote nard online
+  if not CheckNardOnline(aNardCtx) then
+   begin
+   SetFailed := true;
+   end;
+  end;
+
+ if not SetFailed then
+  begin
 
   if (aNardCtx.fHdr.Option[1] <= SG_FLT8) then
     begin
@@ -2223,14 +2362,14 @@ aStr:String;
         begin //not floats
          aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUEINT)');
          if aNardCtx.fHdr.Option[1] < SG_UINT32 then
-           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(aInt) + ')') else
-           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(alu) + ')');
+           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(aInt) + ')') else
+           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(alu) + ')');
         end else
 
          if (aNardCtx.fHdr.Option[1] = SG_FLT4) or (aNardCtx.fHdr.Option[1] = SG_FLT8) then
           begin //floats
           aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUEFLOAT)');
-          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + FloatToStr(aDouble) + ')');
+          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + FloatToStr(aDouble) + ')');
           end;
 
         aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
@@ -2251,10 +2390,15 @@ aStr:String;
              aNardCtx.Context.Connection.IOHandler.Write(aBuff);
              SetLength(aBuff, 0);
             IncSent;
+            exit;
             end;
 
          end;
       end;
+
+            if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+                SetFailed:= not piSetRemoteVal(aNardCtx);
+
 
       if not SetFailed then
        begin
@@ -2302,7 +2446,7 @@ aStr:String;
             aNardCtx.fQryGen.Active := false;
             aNardCtx.fQryGen.SQL.Clear;
             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGIMG (STAMP, ARDID, IMAGE)');
-            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ', :IMG );');
+            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ', :IMG );');
             aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
             aStrm.Destroy;
            try aNardCtx.fQryGen.ExecSQL;
@@ -2349,7 +2493,7 @@ aStr:String;
           aNardCtx.fQryGen.Active := false;
           aNardCtx.fQryGen.SQL.Clear;
           aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUESTR)');
-          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',''' + aStr + ''')');
+          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',''' + aStr + ''')');
           aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
 
            try aNardCtx.fQryGen.ExecSQL;
@@ -2369,9 +2513,14 @@ aStr:String;
                aNardCtx.Context.Connection.IOHandler.Write(aBuff);
                SetLength(aBuff, 0);
               IncSent;
+              exit;
               end;
 
            end;
+
+            if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+                SetFailed:= not piSetRemoteVal(aNardCtx);
+
            if not SetFailed then
             begin
             // send an ack
@@ -2387,10 +2536,42 @@ aStr:String;
             SetLength(aBuff, 0);
             IncSent;
             TrigSetVar;
-            end;
+            end else
+               begin
+               // send a nak
+               SetLength(aBuff, SizeOf(tPacketHdr));
+               aNardCtx.fHdr.Command := CMD_NAK;
+               aNardCtx.fHdr.Option[0] := CMD_SET;
+               aNardCtx.fHdr.Option[1] := 0;
+               aNardCtx.fHdr.Option[2] := 0;
+               aNardCtx.fHdr.Option[3] := 0;
+               aNardCtx.fHdr.DataSize := 0;
+               Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+               aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+               SetLength(aBuff, 0);
+               IncSent;
+               end;
           end;
 
         end;
+
+
+  end else
+     begin
+     // send a nak
+     SetLength(aBuff, SizeOf(tPacketHdr));
+     aNardCtx.fHdr.Command := CMD_NAK;
+     aNardCtx.fHdr.Option[0] := CMD_SET;
+     aNardCtx.fHdr.Option[1] := 0;
+     aNardCtx.fHdr.Option[2] := 0;
+     aNardCtx.fHdr.Option[3] := 0;
+     aNardCtx.fHdr.DataSize := 0;
+     Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+     aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+     SetLength(aBuff, 0);
+     IncSent;
+     end;
+
  end;
 
 
@@ -2408,6 +2589,16 @@ aStr:String;
  // set a value
  if not aNardCtx.fRegged then exit; // outta here..
  SetFailed := false;
+
+  if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+  begin
+  // is remote nard online
+  if not CheckNardOnline(aNardCtx) then
+   SetFailed := true;
+  end;
+
+ if not SetFailed then
+  begin
 
   if (aNardCtx.fHdr.Option[1] <= SG_FLT8) then
     begin
@@ -2445,14 +2636,14 @@ aStr:String;
            begin //not floats
            aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUEINT)');
             if aNardCtx.fHdr.Option[1] < SG_UINT32 then
-              aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(aInt) + ')') else
-           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(alu) + ')');
+              aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(aInt) + ')') else
+           aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + IntToStr(alu) + ')');
            end else
 
          if (aNardCtx.fHdr.Option[1] = SG_FLT4) or  (aNardCtx.fHdr.Option[1] = SG_FLT8) then
           begin //floats
           aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUEFLOAT)');
-          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + FloatToStr(aDouble) + ')');
+          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + FloatToStr(aDouble) + ')');
           end;
 
         aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
@@ -2489,14 +2680,14 @@ aStr:String;
          begin
           aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGDATA (STAMP, ARDID, VALUETYPE, VALUEINDEX, VALUEINT)');
            if (aNardCtx.fHdr.Option[1] < SG_UINT32) then
-          aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
+          aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
            ','+ IntToStr(aNardCtx.fHdr.Option[0])+ ',' + IntToStr(aInt) + ')') else
-          aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
+          aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
            ','+ IntToStr(aNardCtx.fHdr.Option[0])+ ',' + IntToStr(alu) + ')');
          end else
            begin
             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGDATA (STAMP, ARDID, VALUETYPE, VALUEINDEX, VALUEFLOAT)');
-            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
+            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
             ','+ IntToStr(aNardCtx.fHdr.Option[0])+ ',' + FloatToStr(aDouble) + ')');
            end;
 
@@ -2521,6 +2712,10 @@ aStr:String;
             end;
 
          end;
+
+        //see if its a remote nard and try send var
+         if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+           SetFailed:= not piSetRemoteVal(aNardCtx);
 
 
         //set and logged.. send an ack back..
@@ -2621,7 +2816,7 @@ aStr:String;
           aNardCtx.fQryGen.Active := false;
           aNardCtx.fQryGen.SQL.Clear;
           aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, VALUESTR)');
-          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + aStr + ')');
+          aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ',' + aStr + ')');
           aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
 
            try aNardCtx.fQryGen.ExecSQL;
@@ -2650,7 +2845,7 @@ aStr:String;
             aNardCtx.fQryGen.Active := false;
             aNardCtx.fQryGen.SQL.Clear;
             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGDATA (STAMP, ARDID, VALUETYPE, VALUEINDEX, VALUESTR)');
-            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
+            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[1])+
              ','+ IntToStr(aNardCtx.fHdr.Option[0])+ ',' + aStr + ')');
             try
              aNardCtx.fQryGen.ExecSQL;
@@ -2675,6 +2870,11 @@ aStr:String;
             end;
 
            end;
+
+           //see if its a remote nard and try send var
+           if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+             SetFailed:= not piSetRemoteVal(aNardCtx);
+
            if not SetFailed then
             begin
             // send an ack
@@ -2696,6 +2896,20 @@ aStr:String;
 
 
         end;
+  end else
+     begin
+     SetLength(aBuff, SizeOf(tPacketHdr));
+     aNardCtx.fHdr.Command := CMD_NAK;
+     aNardCtx.fHdr.Option[0] := CMD_SET;
+     aNardCtx.fHdr.Option[1] := 0;
+     aNardCtx.fHdr.Option[2] := 0;
+     aNardCtx.fHdr.Option[3] := 0;
+     aNardCtx.fHdr.DataSize := 0;
+     Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+     aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+     SetLength(aBuff, 0);
+     IncSent;
+     end;
 
  end;
 
@@ -2721,6 +2935,21 @@ aStrBytes:tBytes;
  aSingle:=0;
  alu:=0;
 
+
+ if aNardCtx.fNardID <> aNardCtx.fHdr.NardID then
+  begin
+  // is remote nard online
+  if not CheckNardOnline(aNardCtx) then
+   begin
+   failed := true;
+   end;
+  end;
+
+
+
+
+ if not failed then
+  begin
   if (aNardCtx.fHdr.Option[1] <= SG_STR) then
    begin
    // ints
@@ -2733,7 +2962,7 @@ aStrBytes:tBytes;
    aNardCtx.fQryGen.SQL.Add('Select ValueFloat from ARDVALUES') else
      aNardCtx.fQryGen.SQL.Add('Select ValueStr from ARDVALUES');
 
-   aNardCtx.fQryGen.SQL.Add('Where ArdID=' + IntToStr(aNardCtx.fNardID) +' AND ValIndex=' + IntToStr(aNardCtx.fHdr.Option[0]));
+   aNardCtx.fQryGen.SQL.Add('Where ArdID=' + IntToStr(aNardCtx.fHdr.NardID) +' AND ValIndex=' + IntToStr(aNardCtx.fHdr.Option[0]));
      try
       aNardCtx.fQryGen.Active := true;
       except on e: Exception do
@@ -2883,8 +3112,36 @@ aStrBytes:tBytes;
    end else
     begin
         // ??
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_GET;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
 
     end;
+  end else
+     begin
+         // send a nak
+         SetLength(aBuff, SizeOf(tPacketHdr));
+         aNardCtx.fHdr.Command := CMD_NAK;
+         aNardCtx.fHdr.Option[0] := CMD_GET;
+         aNardCtx.fHdr.Option[1] := 0;
+         aNardCtx.fHdr.Option[2] := 0;
+         aNardCtx.fHdr.Option[3] := 0;
+         aNardCtx.fHdr.DataSize := 0;
+         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+         SetLength(aBuff, 0);
+         IncSent;
+
+     end;
 
  end;
 
