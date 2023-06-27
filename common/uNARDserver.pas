@@ -202,6 +202,7 @@ type
     procedure OnExecute(aContext: tIdContext);
     function CheckIdent(aHdr: tPacketHdr): boolean;
     function CheckNardOnline(aPacketCtx: tNardCntx): boolean;
+    procedure  ClearNardOTA(aPacketCtx: tNardCntx);
     function GetNextCommandID(aPacketCtx: tNardCntx):INT64;
     procedure piRecvPacket(aPacketCtx: tNardCntx);
     procedure piRecvNAK(aPacketCtx: tNardCntx);
@@ -1632,6 +1633,25 @@ begin
 
 end;
 
+procedure tNardServer.ClearNardOTA(aPacketCtx: tNardCntx);
+begin
+        aPacketCtx.fQryGen.Active := false;
+        aPacketCtx.fQryGen.SQL.Clear;
+        aPacketCtx.fQryGen.SQL.Add('UPDATE ARDS SET OTASTATUS = 0');
+        aPacketCtx.fQryGen.SQL.Add('WHERE ARDID= ' + IntToStr(aPacketCtx.fNardID));
+       try
+        aPacketCtx.fQryGen.ExecSQL;
+        except on e:exception do
+         begin
+         LogError('NardCtx:Error Setting  ARD OTA 0: ' +e.Message + ' from ip:' + aPacketCtx.Context.Binding.PeerIP);
+         exit;
+         end;
+       end;
+
+          aPacketCtx.fQryGen.Active:=False;
+
+end;
+
 function tNardServer.GetNextCommandID(apacketCtx: tNardCntx): Int64;
 begin
   result:=0;
@@ -1969,6 +1989,7 @@ failed:=false;
          aNardCtx.Context.Connection.IOHandler.Write(aBuff);
          SetLength(aBuff, 0);
          IncSent;
+         ClearNardOTA(aNardCtx);
         end;
 
 end;
@@ -2021,6 +2042,7 @@ done:=false;
              aNardCtx.fOTA_begun := false;
              aNardCtx.fOTA_pos :=0;
              aNardCtx.fHdr.DataSize := 0;
+             ClearNardOTA(aNardCtx);
              end;
 
         // send data back
@@ -2075,6 +2097,7 @@ begin
      begin
      aNardCtx.fOTA_begun:=false;
      aNardCtx.fOTA_pos:=0;
+     ClearNardOTA(aNardCtx);
      // send a ack
      SetLength(aBuff, SizeOf(tPacketHdr));
      aNardCtx.fHdr.Command := CMD_ACK;
