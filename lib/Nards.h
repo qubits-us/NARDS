@@ -138,21 +138,21 @@ public:
   void onParams(ParamGet getParam, ParamSet setParam);
   void poll();
   //sets and logs a var..
-  bool logVar(const uint8_t index, const uint8_t val);
-  bool logVar(const uint8_t index, const uint16_t val);
-  bool logVar(const uint8_t index, const int16_t val);
-  bool logVar(const uint8_t index, const uint32_t val);
-  bool logVar(const uint8_t index, const int32_t val);
-  bool logVar(const uint8_t index, const float val);
-  bool logVar(const uint8_t index, const char* val);
+  bool logVar(const uint8_t index, const uint8_t val, uint16_t idNard =0);
+  bool logVar(const uint8_t index, const uint16_t val, uint16_t idNard =0 );
+  bool logVar(const uint8_t index, const int16_t val, uint16_t idNard = 0);
+  bool logVar(const uint8_t index, const uint32_t val, uint16_t idNard = 0);
+  bool logVar(const uint8_t index, const int32_t val, uint16_t idNard = 0);
+  bool logVar(const uint8_t index, const float val, uint16_t idNard = 0);
+  bool logVar(const uint8_t index, const char* val, uint16_t idNard = 0);
   //sets a var without logging..
-  bool setVar(const uint8_t index, const uint8_t val);
-  bool setVar(const uint8_t index, const uint16_t val);
-  bool setVar(const uint8_t index, const int16_t val);
-  bool setVar(const uint8_t index, const uint32_t val);
-  bool setVar(const uint8_t index, const int32_t val);
-  bool setVar(const uint8_t index, const float val);
-  bool setVar(const uint8_t index, const char* val);
+  bool setVar(const uint8_t index, const uint8_t val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const uint16_t val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const int16_t val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const uint32_t val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const int32_t val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const float val, uint16_t idNard = 0);
+  bool setVar(const uint8_t index, const char* val, uint16_t idNard = 0);
   //request a var from server..
   bool getVar(const uint8_t index, const uint8_t type);
   //execute a command on a remote nard..

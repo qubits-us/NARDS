@@ -52,6 +52,7 @@ bool Nard::begin(char *host, int port) {
 
   if (_nard.connect(host, port)) {
     _started = true;
+    delay(10);//give server some time..
     //register with server..
     _register();
   }
@@ -442,7 +443,10 @@ bool Nard::_onOTAbegin(){
        _firmChunk = 0;
        _firmRecvd = 0;
        _OTAbegun = true;
+      // Serial.print("Starting update, Firm size");
+      // Serial.println(_firmSize);
        Update.begin(_firmSize);
+       Serial.println("Requesting chunk 1");
        //start asking for chunks
        _hdr.Command = CMD_OTA;
        _hdr.Options[0] = OTA_CHUNK;
@@ -466,6 +470,7 @@ bool Nard::_onOTAchunk(){
        _firmChunk++;
        _firmRecvd+=_hdr.DataSize;
        Update.write( _buff, _hdr.DataSize);
+      // Serial.println(_firmChunk);
        //ask for next chunk
        _hdr.Command = CMD_OTA;
        _hdr.Options[0] = OTA_CHUNK;
@@ -490,6 +495,7 @@ bool Nard::_onOTAchunk(){
 
 bool Nard::_onOTAend(){
   if (_firmRecvd == _firmSize){
+    //Serial.println("Update completed..");
    if ( Update.end(true)){
     ESP.restart();
    } else
@@ -1109,15 +1115,16 @@ bool Nard::_getParam() {
 
 
 //set and log a byte..
-bool Nard::logVar(const uint8_t index, const uint8_t val){
+bool Nard::logVar(const uint8_t index, const uint8_t val,  uint16_t idNard ){
   //set and log a byte
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_BYTE;
@@ -1129,15 +1136,16 @@ if (_started) {
   return result;
 }
 
-bool Nard::logVar(const uint8_t index, const uint16_t val){
+bool Nard::logVar(const uint8_t index, const uint16_t val,  uint16_t idNard ){
   //log a word
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_WORD;
@@ -1150,15 +1158,16 @@ if (_started) {
   return result;
 }
 
-bool Nard::logVar(const uint8_t index, const int16_t val){
+bool Nard::logVar(const uint8_t index, const int16_t val,  uint16_t idNard ){
   //log a int
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SETNLOG;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_INT16;
@@ -1171,15 +1180,16 @@ if (_started) {
   return result;
 }
 
-bool Nard::logVar(const uint8_t index, const uint32_t val){
+bool Nard::logVar(const uint8_t index, const uint32_t val,  uint16_t idNard ){
   //log a u long..
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_UINT32;
@@ -1193,16 +1203,17 @@ if (_started) {
   return result;
 }
 
-bool Nard::logVar(const uint8_t index, const int32_t val){
+bool Nard::logVar(const uint8_t index, const int32_t val,  uint16_t idNard ){
   
   //log a int32
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_INT32;
@@ -1216,15 +1227,16 @@ if (_started) {
   return result; 
 }
 
-bool Nard::logVar(const uint8_t index, const float val){
+bool Nard::logVar(const uint8_t index, const float val,  uint16_t idNard ){
    //log a float
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SETNLOG;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_FLT4;
@@ -1239,14 +1251,15 @@ if (_started) {
 }
 
 
-bool Nard::logVar(const uint8_t index, const char* val){
+bool Nard::logVar(const uint8_t index, const char* val,  uint16_t idNard ){
    //logs and sets a string
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     _hdr.Ident[0] = IDENT_HI;
     _hdr.Ident[1] = IDENT_LO;
-    _hdr.NardId = _nardID;
+    _hdr.NardId = idNard;
     _hdr.Command = CMD_SETNLOG;
     _hdr.Options[0] = index;
     _hdr.Options[1] = SG_STR;
@@ -1267,15 +1280,16 @@ if (_started) {
 
 
 
-bool Nard::setVar(const uint8_t index, const uint8_t val){
+bool Nard::setVar(const uint8_t index, const uint8_t val,  uint16_t idNard){
   //set a byte
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_BYTE;
@@ -1287,14 +1301,15 @@ if (_started) {
   return result;
 }
 
-bool Nard::setVar(const uint8_t index, const uint16_t val){
+bool Nard::setVar(const uint8_t index, const uint16_t val,  uint16_t idNard){
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_WORD;
@@ -1308,15 +1323,16 @@ if (_started) {
   //set a word
 }
 
-bool Nard::setVar(const uint8_t index, const int16_t val){
+bool Nard::setVar(const uint8_t index, const int16_t val,  uint16_t idNard){
   //set an int
   bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_SET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = SG_INT16;
@@ -1329,15 +1345,16 @@ if (_started) {
   return result;
 }
 
-bool Nard::setVar(const uint8_t index, const uint32_t val){
+bool Nard::setVar(const uint8_t index, const uint32_t val,  uint16_t idNard){
   //log a u long..
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_UINT32;
@@ -1351,15 +1368,16 @@ if (_started) {
   return result;
 }
 
-bool Nard::setVar(const uint8_t index, const int32_t val){
+bool Nard::setVar(const uint8_t index, const int32_t val,  uint16_t idNard){
   //log a int232
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;  
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_INT32;
@@ -1374,15 +1392,16 @@ if (_started) {
   
 }
 
-bool Nard::setVar(const uint8_t index, const float val){
+bool Nard::setVar(const uint8_t index, const float val,  uint16_t idNard){
    //log a float
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     NardBuff4Packet pack;
     pack.Hdr.Ident[0] = IDENT_HI;
     pack.Hdr.Ident[1] = IDENT_LO;
-    pack.Hdr.NardId = _nardID;
+    pack.Hdr.NardId = idNard;
     pack.Hdr.Command = CMD_SET;
     pack.Hdr.Options[0] = index;
     pack.Hdr.Options[1] = SG_FLT4;
@@ -1398,14 +1417,15 @@ if (_started) {
 }
 
 
-bool Nard::setVar(const uint8_t index, const char* val){
+bool Nard::setVar(const uint8_t index, const char* val,  uint16_t idNard){
    //set a string
 bool result = false;
   if (!_registered) return false;
 if (_started) {
+    if (idNard == 0) idNard =_nardID;
     _hdr.Ident[0] = IDENT_HI;
     _hdr.Ident[1] = IDENT_LO;
-    _hdr.NardId = _nardID;
+    _hdr.NardId = idNard;
     _hdr.Command = CMD_SET;
     _hdr.Options[0] = index;
     _hdr.Options[1] = SG_STR;
