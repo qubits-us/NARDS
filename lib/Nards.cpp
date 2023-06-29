@@ -554,7 +554,7 @@ bool Nard::_getByte() {
 bool Nard::_setByte() {
   bool result = false;
   if (_byteSet != nullptr) {
-    result = _byteSet(_hdr.Options[0], _hdr.Options[2]);
+    result = _byteSet(_hdr.Options[0], _hdr.Options[2],_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -622,7 +622,7 @@ bool Nard::_setWord() {
   bool result = false;
   if (_wordSet != nullptr) {
     uint16_t value = (_hdr.Options[2] << 8) | _hdr.Options[3];
-    result = _wordSet(_hdr.Options[0], value);
+    result = _wordSet(_hdr.Options[0], value,_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -692,7 +692,7 @@ bool Nard::_setInt() {
   bool result = false;
   if (_intSet != nullptr) {
     uint16_t value = (_hdr.Options[2] << 8) | _hdr.Options[3];
-    result = _intSet(_hdr.Options[0], value);
+    result = _intSet(_hdr.Options[0], value,_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -770,7 +770,7 @@ bool Nard::_setInt32() {
   if (_int32Set != nullptr) {
     uint32_t value ;
     memcpy(&value,&_buff,sizeof(int32_t));
-    result = _int32Set(_hdr.Options[0], value);
+    result = _int32Set(_hdr.Options[0], value,_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -848,7 +848,7 @@ bool Nard::_setUInt32() {
   if (_uint32Set != nullptr) {
     uint32_t value ;
     memcpy(&value,&_buff,sizeof(uint32_t));
-    result = _uint32Set(_hdr.Options[0], value);
+    result = _uint32Set(_hdr.Options[0], value,_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -928,7 +928,7 @@ bool Nard::_setFloat() {
   if (_floatSet != nullptr) {
     float value ;
     memcpy(&value,&_buff,sizeof(float));
-    result = _floatSet(_hdr.Options[0], value);
+    result = _floatSet(_hdr.Options[0], value,_hdr.NardId);
     if (result) {
       //got something..
       //send an ack back
@@ -1006,7 +1006,7 @@ bool Nard::_setStr() {
     char value[_hdr.DataSize+1] ;
     _buff[_hdr.DataSize] = 0;
     memcpy(value,&_buff,_hdr.DataSize+1);
-    good = _strSet(_hdr.Options[0], value);
+    good = _strSet(_hdr.Options[0], value,_hdr.NardId);
     if (good) {
       //got something..
       //send an ack back
@@ -1473,14 +1473,15 @@ if (_started) {
 
 
 
-bool Nard::getVar(const uint8_t index, const uint8_t type){
+bool Nard::getVar(const uint8_t index, const uint8_t type, uint16_t idNard ){
   bool fail = true;
   if (!_registered) return !fail;
     if (_started) {
+    if (idNard == 0) idNard =_nardID;      
     NardPacket Hdr;
     Hdr.Ident[0] = IDENT_HI;
     Hdr.Ident[1] = IDENT_LO;
-    Hdr.NardId = _nardID;
+    Hdr.NardId = idNard;
     Hdr.Command = CMD_GET;
     Hdr.Options[0] = index;
     Hdr.Options[1] = type;

@@ -103,19 +103,19 @@ public:
        Nard(); 
   bool begin(char* host, int port);
   typedef bool    (*ByteGet)  (const uint8_t, uint8_t*);
-  typedef bool    (*ByteSet)  (const uint8_t, const uint8_t);
+  typedef bool    (*ByteSet)  (const uint8_t, const uint8_t, const uint16_t idNard);
   typedef bool    (*WordGet)  (const uint8_t, uint16_t*);
-  typedef bool    (*WordSet)  (const uint8_t, const uint16_t);  
+  typedef bool    (*WordSet)  (const uint8_t, const uint16_t, const uint16_t idNard);  
   typedef bool    (*IntGet)   (const uint8_t, int16_t*);
-  typedef bool    (*IntSet)   (const uint8_t, const int16_t);  
+  typedef bool    (*IntSet)   (const uint8_t, const int16_t, const uint16_t idNard);  
   typedef bool    (*Int32Get) (const uint8_t, int32_t*);
-  typedef bool    (*Int32Set) (const uint8_t, const int32_t);  
+  typedef bool    (*Int32Set) (const uint8_t, const int32_t, const uint16_t idNard);  
   typedef bool    (*UInt32Get)(const uint8_t, uint32_t*);
-  typedef bool    (*UInt32Set)(const uint8_t, const uint32_t);  
+  typedef bool    (*UInt32Set)(const uint8_t, const uint32_t, const uint16_t idNard);  
   typedef bool    (*FloatGet) (const uint8_t, float*);
-  typedef bool    (*FloatSet) (const uint8_t, const float);  
+  typedef bool    (*FloatSet) (const uint8_t, const float, const uint16_t idNard);  
   typedef bool    (*StrGet) (const uint8_t, char*);
-  typedef bool    (*StrSet) (const uint8_t, const char*);  
+  typedef bool    (*StrSet) (const uint8_t, const char*, const uint16_t idNard);  
   typedef bool    (*ExeCmd)   (const uint8_t); 
   typedef void    (*HashResp) (const bool);
   typedef void    (*ImgGet)   (void);
@@ -154,7 +154,7 @@ public:
   bool setVar(const uint8_t index, const float val, uint16_t idNard = 0);
   bool setVar(const uint8_t index, const char* val, uint16_t idNard = 0);
   //request a var from server..
-  bool getVar(const uint8_t index, const uint8_t type);
+  bool getVar(const uint8_t index, const uint8_t type, uint16_t idNard = 0);
   //execute a command on a remote nard..
   bool remoteCmd(const uint8_t nardId, const uint8_t cmd);
   //logs a new jpg to the server
