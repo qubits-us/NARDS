@@ -32,7 +32,8 @@ CREATE TABLE ARDCOMMANDS
   OP4 smallint,
   VALUEINT bigint,
   VALUEFLOAT double precision,
-  VALUESTR varchar(512)
+  VALUESTR varchar(512),
+  CHUNK blob sub_type 0
 );
 CREATE TABLE ARDPARAMS
 (
@@ -63,7 +64,8 @@ CREATE TABLE ARDVALUES
   DISPLAYNAME varchar(20),
   VALUEINT bigint,
   VALUEFLOAT double precision,
-  VALUESTR varchar(512)
+  VALUESTR varchar(512),
+  CHUNK blob sub_type 0
 );
 CREATE TABLE FIRMWARES
 (

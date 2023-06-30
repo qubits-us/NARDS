@@ -20,7 +20,8 @@ CREATE TABLE ArdValues
     DisplayName varchar(20),
     ValueInt bigint,
     ValueFloat double precision,
-    ValueStr varchar(512)    
+    ValueStr varchar(512),    
+     Chunk  blob (,0)
     );
     
 create index ValuesByArd on ArdValues (ArdID, ValIndex);   
@@ -60,7 +61,8 @@ CREATE TABLE ArdCommands
     Op4 smallint
     ValueInt bigint,
     ValueFloat double precision,
-    ValueStr varchar(512)    
+    ValueStr varchar(512),
+     Chunk  blob (,0)
     );
     
 
