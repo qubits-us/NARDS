@@ -633,6 +633,7 @@ begin
   fQryGen.Free;
   fDbConn.Free;
   SetLength(fBuff, 0);
+  SetLength(fFirmware,0);
   fOutQue.Free;
   fCrit.Free;
   Inherited;
@@ -833,6 +834,25 @@ begin
                    SetLength(aBuff, SizeOf(tPacketHdr)+Length(aStrBytes));
                    move(aStrBytes[0],aBuff[SizeOf(tPacketHdr)],Length(aStrBytes));
                    SetLength(aStrBytes,0);
+                   end;
+          SG_BLOB : begin
+                    aStrm:=tNardCntx(aContext.Data).fQryGen.CreateBlobStream(tNardCntx(aContext.Data).fQryGen.FieldByName('CHUNK'),bmRead);
+                    if aStrm.Size>0 then
+                     begin
+                     //got something..
+                     SetLength(aStrBytes,aStrm.Size);
+                     aStrm.ReadBuffer(aStrBytes,aStrm.Size);
+                     aHdr.DataSize:=Length(aStrBytes);
+                     SetLength(aBuff, SizeOf(tPacketHdr)+Length(aStrBytes));
+                     move(aStrBytes[0],aBuff[SizeOf(tPacketHdr)],Length(aStrBytes));
+                     aStrm.Free;
+                     SetLength(aStrBytes,0);
+                     end else
+                      begin
+                       failed := true;
+                       aStrm.Free;
+                      end;
+
                    end;
 
           end;
@@ -1670,8 +1690,8 @@ begin
         if aPacketCtx.fQryGen.RecordCount > 0 then
           begin
           result:=aPacketCtx.fQryGen.FieldByName('GEN_ID').AsLargeInt;
-          aPacketCtx.fQryGen.Active:=False;
           end;
+          aPacketCtx.fQryGen.Active:=False;
 
 end;
 
@@ -2525,6 +2545,11 @@ begin
               end;
 
            end;
+
+           if not SetFailed then
+            if (aNardCtx.fNardID <> aNardCtx.fHdr.NardID) AND (aNardCtx.fHdr.Option[1] = SG_BLOB) then
+              SetFailed:= not piSetRemoteVal(aNardCtx);
+
            if not SetFailed then
             begin
             // send an ack
@@ -2540,8 +2565,6 @@ begin
             SetLength(aBuff, 0);
             IncSent;
             TrigSetVar;
-            if (aNardCtx.fNardID <> aNardCtx.fHdr.NardID) AND (aNardCtx.fHdr.Option[1] = SG_BLOB) then
-              SetFailed:= not piSetRemoteVal(aNardCtx);
             end;
           end else     //strings..
          if (aNardCtx.fHdr.Option[1] = SG_STR) AND (aNardCtx.fHdr.DataSize>0) then
