@@ -183,6 +183,8 @@ type
     LogsQryVALUESTR: TZUnicodeStringField;
     qryNardValuesVALUESTR: TZUnicodeStringField;
     qryCommandsVALUESTR: TZUnicodeStringField;
+    qryNardValuesCHUNK: TZBlobField;
+    qryCommandsCHUNK: TZBlobField;
     procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }

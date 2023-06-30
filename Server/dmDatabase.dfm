@@ -532,6 +532,9 @@ object dmDB: TdmDB
       FieldName = 'VALUESTR'
       Size = 512
     end
+    object qryCommandsCHUNK: TZBlobField
+      FieldName = 'CHUNK'
+    end
   end
   object qryNardValues: TZQuery
     Connection = dbConn
@@ -560,6 +563,9 @@ object dmDB: TdmDB
     object qryNardValuesVALUESTR: TZUnicodeStringField
       FieldName = 'VALUESTR'
       Size = 512
+    end
+    object qryNardValuesCHUNK: TZBlobField
+      FieldName = 'CHUNK'
     end
   end
   object qryScreens: TZQuery
