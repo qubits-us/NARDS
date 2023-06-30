@@ -1805,6 +1805,7 @@ aDouble:double;//8 byte float..
 aSingle:single;//4 byte float..
 alu : UInt32;//unsigned 32 bit
 aStr:String;
+aStrm:tMemoryStream;
 begin
   //
 failed:=false;
@@ -1877,18 +1878,45 @@ if not failed then
         end;
       end;
 
-         if (aNardCtx.fHdr.Option[1] = SG_STR) AND (aNardCtx.fHdr.DataSize>0) then  //strings
+         if (aNardCtx.fHdr.Option[1] = SG_STR)  then  //strings
           begin
-          aStr:=TEncoding.ASCII.GetString(aNardCtx.fBuff);
-           if not failed then
-           begin
+           if (aNardCtx.fHdr.DataSize>0) then
+            begin
+            aStr:=TEncoding.ASCII.GetString(aNardCtx.fBuff);
             aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, VALUESTR)');
             aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
              ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
               ','+IntToStr(aNardCtx.fHdr.Option[3])+','''+aStr+''');');
-           end;
+            end else failed:=true;
 
           end;
+
+         if (aNardCtx.fHdr.Option[1] = SG_BLOB) then  //blobs
+          begin
+           if (aNardCtx.fHdr.DataSize>0) then
+            begin
+            aStrm:=tMemoryStream.Create;
+              try
+              aStrm.SetSize( aNardCtx.fHdr.DataSize);
+              aStrm.Write(aNardCtx.fBuff, aNardCtx.fHdr.DataSize);
+              aStrm.Position:=0;
+              aNardCtx.fQryGen.SQL.Add('(COMMANDID, ARDID, COMMAND, OP1, OP2, OP3, OP4, CHUNK)');
+              aNardCtx.fQryGen.SQL.Add('VALUES('+IntToStr(commandID)+', '+IntToStr(aNardCtx.fHdr.NardID)+', '+IntToStr(aNardCtx.fHdr.Command)+
+                ', '+IntToStr(aNardCtx.fHdr.Option[0])+', '+IntToStr(aNardCtx.fHdr.Option[1])+', '+IntToStr(aNardCtx.fHdr.Option[2])+
+                ','+IntToStr(aNardCtx.fHdr.Option[3])+', :CHNK);');
+              aNardCtx.fQryGen.ParamByName('CHNK').LoadFromStream(aStrm);
+              except on e:exception do
+               begin
+                failed := true;
+               LogError('NardCtx:Remote Set Blob Error: SQL :'+e.Message+' - nard ip:' + aNardCtx.Context.Binding.PeerIP);
+               end;
+              end;
+
+            aStrm.Destroy;
+            end else failed:=true;
+          end;
+
+
 
     if not failed then
      begin
@@ -2065,8 +2093,6 @@ done:=false;
        if failed then
          begin
          LogError('NardCtx:OTA Chunk: FW Size:' +IntToStr(Length(aNardCtx.fFirmware))+ ' from ip:' + aNardCtx.Context.Binding.PeerIP);
-
-
          // send a nak
          SetLength(aBuff, SizeOf(tPacketHdr));
          aNardCtx.fHdr.Command := CMD_NAK;
@@ -2081,8 +2107,6 @@ done:=false;
          IncSent;
          exit;
          end;
-
-
 
 end;
 
@@ -2459,8 +2483,8 @@ begin
 
     end else
         begin
-        //saving a jpeg??
-         if (aNardCtx.fHdr.Option[1] = SG_JPG) AND (aNardCtx.fHdr.DataSize>0) then
+        //saving a jpeg or blob
+         if ((aNardCtx.fHdr.Option[1] = SG_JPG)or (aNardCtx.fHdr.Option[1] = SG_BLOB)) AND (aNardCtx.fHdr.DataSize>0) then
           begin
             aStrm:=tMemoryStream.Create;
             aStrm.SetSize( aNardCtx.fHdr.DataSize);
@@ -2468,9 +2492,18 @@ begin
             aStrm.Position:=0;
             aNardCtx.fQryGen.Active := false;
             aNardCtx.fQryGen.SQL.Clear;
-            aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGIMG (STAMP, ARDID, IMAGE)');
-            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ', :IMG );');
-            aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
+           if aNardCtx.fHdr.Option[1] = SG_JPG then
+             begin
+             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGIMG (STAMP, ARDID, IMAGE)');
+             aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ', :IMG );');
+             aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
+             end else
+               begin
+               aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, CHUNK)');
+               aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ', :CHNK )');
+               aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
+               aNardCtx.fQryGen.ParamByName('CHNK').LoadFromStream(aStrm);
+               end;
             aStrm.Destroy;
            try aNardCtx.fQryGen.ExecSQL;
               except on e: Exception do
@@ -2507,6 +2540,8 @@ begin
             SetLength(aBuff, 0);
             IncSent;
             TrigSetVar;
+            if (aNardCtx.fNardID <> aNardCtx.fHdr.NardID) AND (aNardCtx.fHdr.Option[1] = SG_BLOB) then
+              SetFailed:= not piSetRemoteVal(aNardCtx);
             end;
           end else     //strings..
          if (aNardCtx.fHdr.Option[1] = SG_STR) AND (aNardCtx.fHdr.DataSize>0) then
@@ -2779,19 +2814,26 @@ aStr:String;
 
     end else
          begin
-        //saving a jpeg??
-         if (aNardCtx.fHdr.Option[1] = SG_JPG) AND (aNardCtx.fHdr.DataSize>0) then
+        //saving a jpeg or blob
+         if ((aNardCtx.fHdr.Option[1] = SG_JPG)or (aNardCtx.fHdr.Option[1] = SG_BLOB)) AND (aNardCtx.fHdr.DataSize>0) then
           begin
-           //  Log('Saving Jpeg size:'+IntToStr(aNardCtx.fHdr.DataSize));
             aStrm:=tMemoryStream.Create;
             aStrm.SetSize( aNardCtx.fHdr.DataSize);
             aStrm.Write(aNardCtx.fBuff, aNardCtx.fHdr.DataSize);
             aStrm.Position:=0;
             aNardCtx.fQryGen.Active := false;
-            aNardCtx.fQryGen.SQL.Clear;
-            aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGIMG (STAMP, ARDID, IMAGE)');
-            aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fNardID) + ', :IMG );');
-            aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
+           if aNardCtx.fHdr.Option[1] = SG_JPG then
+             begin
+             aNardCtx.fQryGen.SQL.Add('INSERT INTO LOGIMG (STAMP, ARDID, IMAGE)');
+             aNardCtx.fQryGen.SQL.Add('VALUES( CURRENT_TIMESTAMP,' + IntToStr(aNardCtx.fHdr.NardID) + ', :IMG );');
+             aNardCtx.fQryGen.ParamByName('IMG').LoadFromStream(aStrm);
+             end else
+               begin
+               aNardCtx.fQryGen.SQL.Add('UPDATE OR INSERT INTO ARDVALUES (ARDID, VALINDEX, CHUNK)');
+               aNardCtx.fQryGen.SQL.Add('VALUES(' + IntToStr(aNardCtx.fHdr.NardID) + ',' +IntToStr(aNardCtx.fHdr.Option[0]) + ', :CHNK )');
+               aNardCtx.fQryGen.SQL.Add('MATCHING (ARDID, VALINDEX)');
+               aNardCtx.fQryGen.ParamByName('CHNK').LoadFromStream(aStrm);
+               end;
             aStrm.Destroy;
            try
              aNardCtx.fQryGen.ExecSQL;
@@ -2829,7 +2871,15 @@ aStr:String;
             SetLength(aBuff, 0);
             IncSent;
             trigSetVar;
+           //see if its a remote nard and try send var
+
+           if (aNardCtx.fNardID <> aNardCtx.fHdr.NardID) AND (aNardCtx.fHdr.Option[1] = SG_BLOB) then
+             SetFailed:= not piSetRemoteVal(aNardCtx);
+
             end;
+
+
+
           end else //save and log a string..
          if (aNardCtx.fHdr.Option[1] = SG_STR) AND (aNardCtx.fHdr.DataSize>0) then
           begin
@@ -2949,6 +2999,7 @@ aBuff: TIdBytes;
 failed: boolean;
 aStr:String;
 aStrBytes:tBytes;
+aStrm:tStream;
  begin
  // get a value
  if not aNardCtx.fRegged then exit; // outta here..
@@ -3135,6 +3186,88 @@ aStrBytes:tBytes;
    end else
     begin
         // ??
+      if (aNardCtx.fHdr.Option[1] = SG_BLOB) then
+       begin
+       // ints
+       aInt := 0;
+       aNardCtx.fQryGen.Active := false;
+       aNardCtx.fQryGen.SQL.Clear;
+       aNardCtx.fQryGen.SQL.Add('Select CHUNK from ARDVALUES');
+       aNardCtx.fQryGen.SQL.Add('Where ArdID=' + IntToStr(aNardCtx.fHdr.NardID) +' AND ValIndex=' + IntToStr(aNardCtx.fHdr.Option[0]));
+       try
+        aNardCtx.fQryGen.Active := true;
+          except on e: Exception do
+          begin
+           LogError('NardCtx:GetValue:SQL Error: '+ e.Message + ' from ip:' + aNardCtx.Context.Binding.PeerIP);
+           failed := true;
+           // send a nak
+           SetLength(aBuff, SizeOf(tPacketHdr));
+           aNardCtx.fHdr.Command := CMD_NAK;
+           aNardCtx.fHdr.Option[0] := CMD_GET;
+           aNardCtx.fHdr.Option[1] := 0;
+           aNardCtx.fHdr.Option[2] := 0;
+           aNardCtx.fHdr.Option[3] := 0;
+           aNardCtx.fHdr.DataSize := 0;
+           Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+           aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+           SetLength(aBuff, 0);
+           IncSent;
+           exit;
+          end;
+       end;
+
+       if aNardCtx.fQryGen.RecordCount = 0 then
+         begin
+         aNardCtx.fQryGen.Active:=false;
+         LogError('NardCtx:GetValue:Error:No Records for index  from ip:' + aNardCtx.Context.Binding.PeerIP);
+         failed := true;
+         end else
+           begin
+           aStrm:=aNardCtx.fQryGen.CreateBlobStream(aNardCtx.fQryGen.FieldByName('CHUNK'),bmRead);
+            if aStrm.Size>0 then
+              begin
+              //got something..
+              SetLength(aStrBytes,aStrm.Size);
+              aStrm.ReadBuffer(aStrBytes,aStrm.Size);
+              aNardCtx.fHdr.Command := CMD_SET;
+              aNardCtx.fHdr.DataSize:=Length(aStrBytes);
+              SetLength(aBuff, SizeOf(tPacketHdr)+Length(aStrBytes));
+              Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+              move(aStrBytes[0],aBuff[SizeOf(tPacketHdr)],Length(aStrBytes));
+              aStrm.Free;
+              SetLength(aStrBytes,0);
+              aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+              SetLength(aBuff, 0);
+              IncSent;
+              end else
+               begin
+               failed := true;
+               aStrm.Free;
+               end;
+
+              aNardCtx.fQryGen.Active := false;
+
+           end;
+
+         if failed then
+          begin
+          // send a nak
+          SetLength(aBuff, SizeOf(tPacketHdr));
+          aNardCtx.fHdr.Command := CMD_NAK;
+          aNardCtx.fHdr.Option[0] := CMD_GET;
+          aNardCtx.fHdr.Option[1] := 0;
+          aNardCtx.fHdr.Option[2] := 0;
+          aNardCtx.fHdr.Option[3] := 0;
+          aNardCtx.fHdr.DataSize := 0;
+          Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+          aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+          SetLength(aBuff, 0);
+          IncSent;
+          end;
+
+      end else
+        begin
+        //??
          // send a nak
          SetLength(aBuff, SizeOf(tPacketHdr));
          aNardCtx.fHdr.Command := CMD_NAK;
@@ -3147,23 +3280,23 @@ aStrBytes:tBytes;
          aNardCtx.Context.Connection.IOHandler.Write(aBuff);
          SetLength(aBuff, 0);
          IncSent;
+        end;
 
     end;
   end else
      begin
-         // send a nak
-         SetLength(aBuff, SizeOf(tPacketHdr));
-         aNardCtx.fHdr.Command := CMD_NAK;
-         aNardCtx.fHdr.Option[0] := CMD_GET;
-         aNardCtx.fHdr.Option[1] := 0;
-         aNardCtx.fHdr.Option[2] := 0;
-         aNardCtx.fHdr.Option[3] := 0;
-         aNardCtx.fHdr.DataSize := 0;
-         Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
-         aNardCtx.Context.Connection.IOHandler.Write(aBuff);
-         SetLength(aBuff, 0);
-         IncSent;
-
+     // send a nak
+     SetLength(aBuff, SizeOf(tPacketHdr));
+     aNardCtx.fHdr.Command := CMD_NAK;
+     aNardCtx.fHdr.Option[0] := CMD_GET;
+     aNardCtx.fHdr.Option[1] := 0;
+     aNardCtx.fHdr.Option[2] := 0;
+     aNardCtx.fHdr.Option[3] := 0;
+     aNardCtx.fHdr.DataSize := 0;
+     Move(aNardCtx.fHdr, aBuff[0], SizeOf(tPacketHdr));
+     aNardCtx.Context.Connection.IOHandler.Write(aBuff);
+     SetLength(aBuff, 0);
+     IncSent;
      end;
 
  end;

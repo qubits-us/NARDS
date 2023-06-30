@@ -48,6 +48,7 @@ SG_FLT4   = 5;
 SG_FLT8   = 6;
 SG_STR    = 7;
 SG_JPG    = 8;
+SG_BLOB   = 9;
 
 
 //hash values..
