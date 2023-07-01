@@ -16,8 +16,8 @@ BlobData blob;
 
 
 
-const char *ssid = "**********";
-const char *password = "***********";
+const char *ssid = "******";
+const char *password = "*******";
 
 char *host = "192.168.0.51";  // IP of nards server
 int port = 12000;             // server port
@@ -270,7 +270,10 @@ bool OnGetBlob(const uint8_t index, uint8_t* value, int32_t* size){
   Serial.write(*size);
 
   if (*size>=sizeof(blob)){
+    //copy blob data
     memcpy(value, &blob,sizeof(blob));
+    //set size of data
+    *size=sizeof(blob);
      result = true;  
   Serial.print(" : ");
   Serial.write(*value);
